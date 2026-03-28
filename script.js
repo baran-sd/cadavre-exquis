@@ -280,7 +280,15 @@ async function runAgent(isChain = false) {
             seed: seed, temperature: 0.7
           })
         });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`${res.status}: ${errText.substring(0, 30)}`);
+        }
+
         const data = await res.json();
+        if (!data.choices || !data.choices[0]) throw new Error("Empty AI response");
+        
         finalPrompt = data.choices[0].message.content.trim();
         
         // Show prompt immediately for debugging
@@ -288,8 +296,9 @@ async function runAgent(isChain = false) {
         document.getElementById('log-body').textContent = finalPrompt;
         
       } catch (e) {
+        console.error("LLM Agent Failure:", e);
         finalPrompt = userTask;
-        setStatus('⚠️ LLM Error, using literal input');
+        setStatus(`⚠️ Agent Error: ${e.message}`);
       }
     } else {
       // SKIP LLM
