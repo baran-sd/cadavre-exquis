@@ -2,6 +2,7 @@
  * AI Image Agent - Core Logic (Elite Version)
  * Based on original code by baran-sd
  * Fully restored Cadavre Exquis instructions & Z-Image support
+ * FIX: Authenticated Image loading via Blob to avoid "Loading Error"
  */
 
 const PRESETS = {
@@ -24,6 +25,7 @@ const MODEL_MAP = {
 
 let lastImageUrl = '';
 let lastAgentPrompt = '';
+let currentImageObjectUrl = '';
 
 function init() {
   const hash = new URLSearchParams(window.location.hash.slice(1));
@@ -64,7 +66,6 @@ async function fetchBalance(key) {
     });
     if (!r.ok) throw new Error('Balance API error');
     const d = await r.json();
-    // Safety check for balance field
     const bal = d.balance !== undefined ? d.balance : (d.pollen !== undefined ? d.pollen : '—');
     document.getElementById('badge').textContent = `🔌 ${bal} Pollen`;
   } catch (e) {
@@ -132,9 +133,7 @@ async function runAgent(isChain = false) {
   const userTaskInput = document.getElementById('user-task');
   const selectedModel = document.getElementById('llm-model').value;
   const llmModel = MODEL_MAP[selectedModel] || selectedModel;
-  
   const imgModel = document.getElementById('img-model').value;
-  
   const [w, h] = document.getElementById('aspect').value.split(':');
   const seedVal = document.getElementById('seed-input').value;
   const seed = seedVal ? parseInt(seedVal) : Math.floor(Math.random() * 999999);
@@ -180,11 +179,10 @@ async function runAgent(isChain = false) {
         seed: seed,
         temperature: 0.7
       }),
-      signal: getTimeoutSignal(35000)
+      signal: getTimeoutSignal(45000)
     });
 
     if (!res.ok) throw new Error(`LLM Error ${res.status}`);
-
     const data = await res.json();
     finalPrompt = data.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
     
@@ -197,33 +195,59 @@ async function runAgent(isChain = false) {
   lastAgentPrompt = finalPrompt;
   setStatus('🎨 Генерирую картинку...');
   
-  const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true`;
+  const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true`;
   const imgElement = document.getElementById('result-img');
   
-  imgElement.onload = () => {
-    document.getElementById('spinner').classList.add('hidden');
-    document.getElementById('status').classList.add('hidden');
-    imgElement.classList.remove('hidden');
-    document.getElementById('img-overlay').classList.remove('hidden');
-    document.getElementById('prompt-log').classList.remove('hidden');
-    document.getElementById('log-body').textContent = finalPrompt;
+  try {
+    // We use fetch with Authorization header to handle private/paid models like Z-Image
+    const imgRes = await fetch(imgUrl, {
+      headers: {
+        ...(key ? { 'Authorization': `Bearer ${key}` } : {})
+      }
+    });
+
+    if (!imgRes.ok) throw new Error("Image Generation Failed");
+
+    const blob = await imgRes.blob();
     
-    btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="sparkles"></i>✨ Run Agent';
-    lucide.createIcons();
-    fetchBalance(key);
-  };
+    // Revoke previous URL to avoid memory leaks
+    if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
+    
+    currentImageObjectUrl = URL.createObjectURL(blob);
+    
+    imgElement.onload = () => {
+        document.getElementById('spinner').classList.add('hidden');
+        document.getElementById('status').classList.add('hidden');
+        imgElement.classList.remove('hidden');
+        document.getElementById('img-overlay').classList.remove('hidden');
+        document.getElementById('prompt-log').classList.remove('hidden');
+        document.getElementById('log-body').textContent = finalPrompt;
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="sparkles"></i>✨ Run Agent';
+        lucide.createIcons();
+        fetchBalance(key);
+    };
 
-  imgElement.onerror = () => {
+    imgElement.onerror = () => {
+        document.getElementById('spinner').classList.add('hidden');
+        setStatus('❌ Ошибка отрисовки');
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="sparkles"></i>✨ Run Agent';
+        lucide.createIcons();
+    };
+
+    imgElement.src = currentImageObjectUrl;
+    lastImageUrl = imgUrl; // Keep original URL for download/copy
+
+  } catch (e) {
+    console.error('Image Generation Failed', e);
     document.getElementById('spinner').classList.add('hidden');
-    setStatus('❌ Ошибка загрузки');
+    setStatus('❌ Ошибка загрузки: проверьте баланс');
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="sparkles"></i>✨ Run Agent';
     lucide.createIcons();
-  };
-
-  imgElement.src = imgUrl;
-  lastImageUrl = imgUrl;
+  }
 }
 
 function setUILoading() {
