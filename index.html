@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadavre Exquis | AI Image Agent</title>
+    <meta name="description" content="AI Image Agent powered by Pollinations.ai. Multi-modal prompt engineering and image generation.">
+    <meta property="og:title" content="Cadavre Exquis | AI Image Agent">
+    <meta property="og:description" content="Generate stunning AI art with specialized agent presets.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- CONNECT SCREEN -->
+    <div id="connect-screen">
+        <div class="icon">🌌</div>
+        <h1>Cadavre Exquis</h1>
+        <p>Expert-level AI prompt engineering.<br>LLM intelligence → Flux Meta-Generations.<br><br>Connect your Pollen to begin.</p>
+        <button class="btn-primary" id="connect-btn">
+            <i data-lucide="link"></i> Connect Pollinations
+        </button>
+        <div class="note">Secure OAuth via enter.pollinations.ai</div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="app" class="hidden">
+        <header>
+            <div class="logo">🌌 <span>Cadavre Exquis</span></div>
+            <div class="header-right">
+                <div class="badge" id="badge">Connecting...</div>
+                <div class="disconnect" id="disconnect-btn">Disconnect</div>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="card-title"><i data-lucide="settings"></i> <span>Agent Instructions</span> <span class="free-badge">FREE</span></div>
+            <div class="presets" id="presets">
+                <button class="preset-btn active" data-id="cadavre">Metamorphosis</button>
+                <button class="preset-btn" data-id="realism">Photorealism</button>
+                <button class="preset-btn" data-id="anime">Anime Core</button>
+                <button class="preset-btn" data-id="concept">World Build</button>
+                <button class="preset-btn" data-id="logo">Identity</button>
+                <button class="preset-btn" data-id="product">Product</button>
+                <button class="preset-btn" data-id="custom">Custom</button>
+            </div>
+            <textarea id="sys-prompt" placeholder="Define the AI's creative persona..."></textarea>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><i data-lucide="message-square"></i> <span>Visual Goal</span></div>
+            <textarea id="user-task" placeholder="Describe your vision in plain language... I will engineer the details." style="min-height:90px"></textarea>
+            
+            <div class="settings-row">
+                <div>
+                    <label>Intelligence <span class="free-badge">FREE</span></label>
+                    <select id="llm-model">
+                        <option value="gemini">Gemini (Ultra Quality)</option>
+                        <option value="grok">Grok (Experimental)</option>
+                        <option value="openai" selected>GPT-4o (Standard)</option>
+                        <option value="claude">Claude (Creative)</option>
+                        <option value="mistral">Mistral (Fast)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Generator</label>
+                    <select id="img-model">
+                        <option value="flux">Flux (High Detail)</option>
+                        <option value="zimage">Turbo (Instant)</option>
+                        <option value="grok-imagine">Grok Imagine (Vibrant)</option>
+                        <option value="nanobanana-2">Banana 2 (Artistic)</option>
+                        <option value="gptimage">GPT Image (Semantic)</option>
+                        <option value="seedream5">Seedream 5 (Surreal)</option>
+                        <option value="klein">Klein (Efficient)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div>
+                    <label>Aspect Ratio</label>
+                    <select id="aspect">
+                        <option value="1024:1024">1:1 Square</option>
+                        <option value="1024:576" selected>16:9 Cinema</option>
+                        <option value="576:1024">9:16 Story</option>
+                        <option value="768:1024">3:4 Portrait</option>
+                        <option value="1024:768">4:3 Desktop</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Entropy (Seed)</label>
+                    <input type="number" id="seed-input" placeholder="Randomized" min="1" max="999999">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="gen-btn">
+            <i data-lucide="sparkles"></i> ✨ Run Agent
+        </button>
+
+        <div id="output">
+            <div class="placeholder-msg" id="placeholder">
+                <div class="big">🎨</div> 
+                <span>Agent idle. Awaiting creative input.</span>
+            </div>
+            <div class="spinner hidden" id="spinner"></div>
+            <div class="status-msg hidden" id="status"></div>
+            <img id="result-img" class="hidden" alt="AI Meta-Art Result">
+            <div class="img-overlay hidden" id="img-overlay">
+                <button class="tool-btn" id="dl-btn"><i data-lucide="download"></i> Save</button>
+                <button class="tool-btn" id="cp-btn"><i data-lucide="copy"></i> Copy</button>
+                <button class="tool-btn" id="chain-btn"><i data-lucide="git-branch"></i> Evolve (Chain)</button>
+                <button class="tool-btn" id="regen-btn"><i data-lucide="refresh-cw"></i> Retry</button>
+            </div>
+        </div>
+
+        <div class="prompt-log hidden" id="prompt-log">
+            <div class="prompt-log-header" id="log-toggle">
+                <b><i data-lucide="terminal" style="display:inline; width:14px; margin-right:5px"></i> Engineered Prompt</b>
+                <span id="log-arrow">▼</span>
+            </div>
+            <div class="prompt-log-body" id="log-body"></div>
+        </div>
+
+        <footer>Powered by <a href="https://pollinations.ai" target="_blank">pollinations.ai</a> | <span style="opacity:0.6">Elite Edition v1.2</span></footer>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
