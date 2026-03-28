@@ -1,7 +1,7 @@
 /**
- * AI Image Agent - Core Logic (Unified Elite Version)
+ * Cadavre Builder - Core Logic
  * Author: Antigravity / baran-sd
- * Integrates Cadavre Exquis Visual Builder and Classic Agent.
+ * A specialized visual constructor for tri-style character metamorphosis.
  */
 
 // --- BUILDER DATA ---
@@ -42,28 +42,9 @@ const ATMOSPHERES = [
   { emoji: '🔥🔥', name: 'Flame', desc: 'industrial forges with burning flames and embers' }
 ];
 
-const PRESETS = {
-  cadavre: `You are an expert AI image prompt engineer specializing in Cadavre Exquis tri-style metamorphosis art. The user will describe a subject and 3 styles (Top/Middle/Bottom). Write a hyper-detailed image prompt where ONE character transforms seamlessly TOP→MIDDLE→BOTTOM through the 3 styles, like watercolor ink dissolving. NO hard borders. Each zone 5-7 specific visual details. End with: Cinematic 8k, photorealistic, seamless gradient metamorphosis. Return ONLY the prompt text.`,
-  realism: `You are a photography and photorealism expert AI prompt engineer. Transform the user's request into an ultra-realistic photograph prompt. Include: camera model, lens, aperture, ISO, lighting setup, location, textures, color grading. Use: RAW photo, photorealistic, 8k. Return ONLY the prompt text.`,
-  anime: `You are an anime and manga visual art AI prompt engineer. Transform the user's request into a detailed anime-style image prompt. Include: art style reference, character details, cel shading, vibrant colors. Use: anime style, Detailed. Return ONLY the prompt text.`,
-  concept: `You are a concept art AI prompt engineer. Transform the user's request into professional concept art. Include: Arstation style, mood, color palette, lighting. Use: concept art, digital painting, artstation. Return ONLY the prompt text.`,
-  logo: `You are a logo designer. Transform the user's request into a logo prompt. Include: minimalist style, colors, symbol, typography. Return ONLY the prompt text.`,
-  custom: ''
-};
-
-const MODEL_MAP = {
-  'gemini': 'p7',
-  'grok': 'openai', 
-  'openai': 'openai',
-  'claude': 'claude',
-  'mistral': 'mistral'
-};
-
 // --- APP STATE ---
-let activeMode = 'classic'; // 'classic' or 'builder'
 let lastImageUrl = '';
 let lastAgentPrompt = '';
-let currentImageObjectUrl = '';
 
 let builderSelections = {
   gender: null,
@@ -87,8 +68,6 @@ function init() {
   const key = localStorage.getItem('pollen_key');
   if (key) { showApp(key); } else { showConnect(); }
 
-  initTabs();
-  initClassicMode();
   initBuilderGrids();
   setupEventListeners();
 }
@@ -101,49 +80,10 @@ function showConnect() {
 function showApp(key) {
   document.getElementById('connect-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  document.getElementById('sys-prompt').value = PRESETS.cadavre;
   fetchBalance(key);
 }
 
-// --- TABS & NAVIGATION ---
-function initTabs() {
-  const btnClassic = document.getElementById('tab-classic');
-  const btnBuilder = document.getElementById('tab-builder');
-  const panelClassic = document.getElementById('panel-classic');
-  const panelBuilder = document.getElementById('panel-builder');
-
-  btnClassic.onclick = () => {
-    activeMode = 'classic';
-    btnClassic.className = 'px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-background shadow-sm';
-    btnBuilder.className = 'px-4 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground';
-    panelClassic.classList.remove('hidden');
-    panelBuilder.classList.add('hidden');
-  };
-
-  btnBuilder.onclick = () => {
-    activeMode = 'builder';
-    btnBuilder.className = 'px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-background shadow-sm';
-    btnClassic.className = 'px-4 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground';
-    panelBuilder.classList.remove('hidden');
-    panelClassic.classList.add('hidden');
-  };
-}
-
-// --- CLASSIC MODE ---
-function initClassicMode() {
-  const pst = document.querySelectorAll('.preset-btn');
-  pst.forEach(btn => {
-    btn.onclick = () => {
-      pst.forEach(b => b.classList.remove('active', 'bg-blue-600', 'text-white'));
-      btn.classList.add('active', 'bg-blue-600', 'text-white');
-      const id = btn.dataset.id;
-      document.getElementById('sys-prompt').value = PRESETS[id] || '';
-      if (id === 'custom') document.getElementById('sys-prompt').focus();
-    };
-  });
-}
-
-// --- BUILDER MODE ---
+// --- BUILDER UI ---
 function initBuilderGrids() {
   // Poses
   const poseGrid = document.getElementById('poseGrid');
@@ -226,20 +166,21 @@ function setupEventListeners() {
   document.getElementById('log-toggle').onclick = () => {
     document.getElementById('log-body').classList.toggle('hidden');
   };
-
-  document.getElementById('use-llm').onchange = (e) => {
-    document.getElementById('sys-prompt-container').classList.toggle('hidden', !e.target.checked);
-  };
 }
 
 // --- GENERATION LOGIC ---
 async function runAgent(isChain = false) {
   const key = localStorage.getItem('pollen_key');
-  console.log("Pollinations API Key found:", key ? "YES (masked)" : "NO");
   
   if (!key) {
     alert("🌌 Please connect your Pollinations account first!");
     showConnect();
+    return;
+  }
+
+  // VALIDATION
+  if (!builderSelections.gender || builderSelections.pose === null) {
+    alert('⚠️ Select character gender and pose first!');
     return;
   }
 
@@ -248,98 +189,35 @@ async function runAgent(isChain = false) {
   const seedVal = document.getElementById('seed-input').value;
   const seed = seedVal ? parseInt(seedVal) : Math.floor(Math.random() * 999999);
 
-  let finalPrompt = '';
+  // START UI
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Building...';
+  setUILoading();
 
-  if (activeMode === 'classic') {
-    const sysPrompt = document.getElementById('sys-prompt').value.trim();
-    let userTask = document.getElementById('user-task').value.trim();
-    const useLLM = document.getElementById('use-llm').checked;
+  // CONSTRUCT PROMPT
+  const g = builderSelections.gender === 'male' ? 'handsome man' : 'beautiful woman';
+  const p = POSES[builderSelections.pose].desc;
+  const tS = builderSelections.topStyle !== null ? STYLES[builderSelections.topStyle] : null;
+  const mS = builderSelections.middleStyle !== null ? STYLES[builderSelections.middleStyle] : null;
+  const bS = builderSelections.bottomStyle !== null ? STYLES[builderSelections.bottomStyle] : null;
+  const atm = builderSelections.atmosphere !== null ? ATMOSPHERES[builderSelections.atmosphere].desc : '';
 
-    if (isChain) userTask = `Continue this visual story: ${lastAgentPrompt}. Evolve it further with new surreal details.`;
-    
-    if (!userTask) {
-        alert('❌ Please enter a task for the agent!');
-        document.getElementById('user-task').focus();
-        return;
-    }
-    
-    if (useLLM) {
-      setUILoading();
-      setStatus(isChain ? "⛓️ Продолжаю цепочку..." : "🤖 Агент пишет промпт...");
-      
-      try {
-        const selectedModel = document.getElementById('llm-model').value;
-        const llmModel = MODEL_MAP[selectedModel] || selectedModel;
-        console.log(`Sending to LLM (${llmModel}):`, userTask);
-        const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(key ? { 'Authorization': `Bearer ${key}` } : {}) },
-          body: JSON.stringify({
-            model: llmModel,
-            messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userTask }],
-            seed: seed, temperature: 0.7
-          })
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`${res.status}: ${errText.substring(0, 30)}`);
-        }
-
-        const data = await res.json();
-        if (!data.choices || !data.choices[0]) throw new Error("Empty AI response");
-        
-        finalPrompt = data.choices[0].message.content.trim();
-        
-        // Show prompt immediately for debugging
-        document.getElementById('prompt-log').classList.remove('hidden');
-        document.getElementById('log-body').textContent = finalPrompt;
-        
-      } catch (e) {
-        console.error("LLM Agent Failure:", e);
-        finalPrompt = userTask;
-        setStatus(`⚠️ Agent Error: ${e.message}`);
-      }
-    } else {
-      // SKIP LLM
-      finalPrompt = userTask;
-      console.log("Direct Prompt Mode:", finalPrompt);
-      setUILoading();
-      document.getElementById('prompt-log').classList.remove('hidden');
-      document.getElementById('log-body').textContent = finalPrompt;
-    }
-  } else {
-    // BUILDER MODE
-    if (!builderSelections.gender || builderSelections.pose === null) {
-      alert('⚠️ Select character gender and pose first!');
-      return;
-    }
-    const btn = document.getElementById('gen-btn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Processing...';
-
-    setUILoading();
-    const g = builderSelections.gender === 'male' ? 'handsome man' : 'beautiful woman';
-    const p = POSES[builderSelections.pose].desc;
-    const tS = builderSelections.topStyle !== null ? STYLES[builderSelections.topStyle] : null;
-    const mS = builderSelections.middleStyle !== null ? STYLES[builderSelections.middleStyle] : null;
-    const bS = builderSelections.bottomStyle !== null ? STYLES[builderSelections.bottomStyle] : null;
-    const atm = builderSelections.atmosphere !== null ? ATMOSPHERES[builderSelections.atmosphere].desc : '';
-
-    finalPrompt = `Stunning full-body portrait of a single ${g}, ${p}. THREE SEAMLESS STYLE ZONES: `;
-    if (tS) finalPrompt += `TOP: ${tS.name} (${tS.topDesc}). `;
-    if (mS) finalPrompt += `MIDDLE: ${mS.name} (${mS.midDesc}). `;
-    if (bS) finalPrompt += `BOTTOM: ${bS.name} (${bS.botDesc}). `;
-    finalPrompt += `Seamless transition gradients, identical facial features, same character throughout. Atmosphere: ${atm}. Photorealistic 8k vertical.`;
-    
-    // Show prompt in Builder mode too
-    document.getElementById('prompt-log').classList.remove('hidden');
-    document.getElementById('log-body').textContent = finalPrompt;
+  let finalPrompt = `Stunning full-body portrait of a single ${g}, ${p}. THREE SEAMLESS STYLE ZONES: `;
+  if (tS) finalPrompt += `TOP: ${tS.name} (${tS.topDesc}). `;
+  if (mS) finalPrompt += `MIDDLE: ${mS.name} (${mS.midDesc}). `;
+  if (bS) finalPrompt += `BOTTOM: ${bS.name} (${bS.botDesc}). `;
+  finalPrompt += `Seamless transition gradients, identical facial features, same character throughout. Atmosphere: ${atm}. Photorealistic 8k vertical.`;
+  
+  if (isChain) {
+    finalPrompt = `Continuous metamorphosis: ${lastAgentPrompt}. Now blending into: ${finalPrompt}. Seamless integration.`;
   }
 
-  console.log("Final Prompt for Image Gen:", finalPrompt);
-  // IMAGE GENERATION
-  lastAgentPrompt = finalPrompt;
+  // Show prompt log
+  document.getElementById('prompt-log').classList.remove('hidden');
+  document.getElementById('log-body').textContent = finalPrompt;
+
+  console.log("Final Prompt for Gen:", finalPrompt);
   setStatus('🎨 Генерирую картинку...');
   
   let imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true&safe=true`;
@@ -347,34 +225,29 @@ async function runAgent(isChain = false) {
     imgUrl += `&pollen_key=${key}&key=${key}`;
   }
   
-  console.log("Full Image Gen URL:", imgUrl);
   const imgElement = document.getElementById('result-img');
 
-  // Direct img.src assignment (Most reliable for CORS)
   imgElement.onload = () => {
     document.getElementById('loading-state').classList.add('hidden');
     imgElement.classList.remove('hidden');
     document.getElementById('img-overlay').classList.remove('hidden');
-    document.getElementById('prompt-log').classList.remove('hidden');
-    document.getElementById('log-body').textContent = finalPrompt;
     lastImageUrl = imgUrl;
+    lastAgentPrompt = finalPrompt;
     
-    const btn = document.getElementById('gen-btn');
     btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> RUN AGENT / GENERATE';
+    btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> GENERATE CHARACTER';
     lucide.createIcons();
     fetchBalance(key);
   };
 
   imgElement.onerror = () => {
-    console.error("Image failed to load. Full URL:", imgUrl);
-    setStatus("❌ Image load failed. Check your Pollen balance or console logs.");
+    console.error("Image failed to load:", imgUrl);
+    setStatus("❌ Image load failed. Check your Pollen balance.");
     document.getElementById('loading-state').classList.add('hidden');
     document.getElementById('placeholder').classList.remove('hidden');
     
-    const btn = document.getElementById('gen-btn');
     btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> RUN AGENT / GENERATE';
+    btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> GENERATE CHARACTER';
     lucide.createIcons();
   };
 
@@ -386,7 +259,7 @@ function setUILoading() {
   document.getElementById('loading-state').classList.remove('hidden');
   document.getElementById('result-img').classList.add('hidden');
   document.getElementById('img-overlay').classList.add('hidden');
-  setStatus('🤖 Initializing...');
+  setStatus('🤖 Initializing Character...');
 }
 
 function setStatus(msg) { document.getElementById('status').textContent = msg; }

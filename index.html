@@ -70,9 +70,9 @@
     <!-- CONNECT SCREEN -->
     <div id="connect-screen" class="max-w-md w-full glass-card p-10 rounded-2xl text-center space-y-6 shadow-2xl animate-fade-in">
         <div class="text-6xl mb-4">🌌</div>
-        <h1 class="text-3xl font-extrabold tracking-tight">AI Image Agent</h1>
+        <h1 class="text-3xl font-extrabold tracking-tight">Cadavre Builder</h1>
         <p class="text-muted-foreground leading-relaxed">
-            Задай инструкцию агенту.<br>LLM напишет промпт → Image модель сгенерирует.
+            Визуальный конструктор персонажей.<br>Выбери детали → Сгенерируй шедевр.
         </p>
         <button id="connect-btn" class="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 transition-all">
             <i data-lucide="link" class="w-5 h-5"></i> Connect Pollinations Account
@@ -84,7 +84,7 @@
     <div id="app" class="hidden w-full max-w-6xl flex flex-col gap-6 animate-fade-in">
         <header class="flex justify-between items-center py-2 px-1">
             <div class="flex items-center gap-3">
-                <span class="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">🤖 AGENT</span>
+                <span class="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">🎨 BUILDER</span>
             </div>
             <div class="flex items-center gap-4">
                 <div id="badge" class="bg-secondary text-xs font-semibold py-1.5 px-3 rounded-full border border-border">🔌 — Pollen</div>
@@ -97,53 +97,8 @@
             <!-- LEFT COLUMN: INPUTS -->
             <div class="lg:col-span-7 space-y-6">
                 
-                <!-- MODE TABS -->
-                <div class="flex p-1 bg-secondary rounded-lg w-fit">
-                    <button id="tab-classic" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-background shadow-sm">Classic Agent</button>
-                    <button id="tab-builder" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground">Cadavre Builder</button>
-                </div>
-
-                <!-- CLASSIC MODE PANEL -->
-                <div id="panel-classic" class="space-y-6">
-                    <!-- TOGGLE AI AGENT -->
-                    <div class="flex items-center justify-between p-3 glass-card rounded-xl border border-white/10">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="zap" class="w-5 h-5 text-yellow-500"></i>
-                            <div>
-                                <div class="text-[11px] font-black uppercase tracking-widest leading-none">Use AI Agent</div>
-                                <div class="text-[9px] text-muted-foreground mt-1">Refine your prompt with GPT-4/Gemini</div>
-                            </div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="use-llm" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
-                    </div>
-
-                    <div id="sys-prompt-container" class="glass-card p-6 rounded-xl space-y-4">
-                        <div class="flex items-center justify-between">
-                            <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">System Instruction</h2>
-                            <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20 font-bold uppercase">Free LLM</span>
-                        </div>
-                        <div class="flex flex-wrap gap-2 pb-2">
-                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all active" data-id="cadavre">Cadavre Exquis</button>
-                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="realism">Realism</button>
-                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="anime">Anime</button>
-                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="concept">Concept Art</button>
-                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="logo">Logo</button>
-                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="custom">Custom</button>
-                        </div>
-                        <textarea id="sys-prompt" class="w-full bg-black/40 border border-border rounded-lg p-4 text-sm text-secondary-foreground focus:border-blue-500/50 outline-none transition-all min-h-[120px]" placeholder="Explain how the agent should think..."></textarea>
-                    </div>
-
-                    <div class="glass-card p-6 rounded-xl space-y-4">
-                        <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">What to generate?</h2>
-                        <textarea id="user-task" class="w-full bg-black/40 border border-border rounded-lg p-4 text-[15px] focus:border-blue-500/50 outline-none transition-all min-h-[80px]" placeholder="Describe your vision in plain words..."></textarea>
-                    </div>
-                </div>
-
-                <!-- BUILDER MODE PANEL (HIDDEN BY DEFAULT) -->
-                <div id="panel-builder" class="hidden space-y-6">
+                <!-- BUILDER MODE PANEL -->
+                <div id="panel-builder" class="space-y-6">
                     <!-- GENDER -->
                     <div class="glass-card p-4 rounded-xl space-y-3">
                         <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">Character Gender</h2>
@@ -192,15 +147,6 @@
                 <div class="glass-card p-6 rounded-xl">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <label class="text-[10px] font-bold uppercase text-muted-foreground p-1">LLM Model</label>
-                            <select id="llm-model" class="w-full bg-black/40 border border-border rounded-lg p-2 text-sm outline-none">
-                                <option value="gemini">Gemini Pro</option>
-                                <option value="grok">Grok Beta</option>
-                                <option value="openai" selected>GPT-4o</option>
-                                <option value="claude">Claude 3.5</option>
-                            </select>
-                        </div>
-                        <div class="space-y-2">
                             <label class="text-[10px] font-bold uppercase text-muted-foreground p-1">Image Model</label>
                             <select id="img-model" class="w-full bg-black/40 border border-border rounded-lg p-2 text-sm outline-none font-bold text-blue-400">
                                 <option value="zimage" selected>⭐ Z-Image Turbo</option>
@@ -226,7 +172,7 @@
                 </div>
 
                 <button id="gen-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-black text-lg shadow-lg shadow-blue-900/20 transform transition-all active:scale-95 flex items-center justify-center gap-3">
-                    <i data-lucide="sparkles" class="w-6 h-6"></i> RUN AGENT / GENERATE
+                    <i data-lucide="sparkles" class="w-6 h-6"></i> GENERATE CHARACTER
                 </button>
 
             </div>
@@ -239,7 +185,7 @@
                     <!-- EMPTY STATE -->
                     <div id="placeholder" class="text-center space-y-4 p-10 opacity-40">
                         <div class="text-7xl">🎴</div>
-                        <div class="text-sm font-bold uppercase tracking-widest leading-loose">Waiting for generation...<br><span class="text-[10px] opacity-60">LLM (Free) → Image Generation</span></div>
+                        <div class="text-sm font-bold uppercase tracking-widest leading-loose">Waiting for generation...<br><span class="text-[10px] opacity-60">Visual selections → Image Generation</span></div>
                     </div>
 
                     <!-- LOADING STATE (Skeleton) -->
