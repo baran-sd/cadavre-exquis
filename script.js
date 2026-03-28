@@ -200,10 +200,11 @@ function selectGender(gender) {
 // --- CORE UTILS ---
 async function fetchBalance(key) {
   try {
-    const r = await fetch('https://gen.pollinations.ai/account/balance', { headers: { Authorization: `Bearer ${key}` } });
+    const r = await fetch('https://gen.pollinations.ai/pollen', { headers: { Authorization: `Bearer ${key}` } });
     if (!r.ok) throw new Error();
     const d = await r.json();
-    document.getElementById('badge').textContent = `🔌 ${d.balance ?? d.pollen ?? '—'} Pollen`;
+    const balance = d.balance ?? d.pollen ?? d.total_pollen ?? '—';
+    document.getElementById('badge').textContent = `🔌 ${balance} Pollen`;
   } catch (e) {
     document.getElementById('badge').textContent = '🔌 — Pollen';
   }
@@ -225,11 +226,23 @@ function setupEventListeners() {
   document.getElementById('log-toggle').onclick = () => {
     document.getElementById('log-body').classList.toggle('hidden');
   };
+
+  document.getElementById('use-llm').onchange = (e) => {
+    document.getElementById('sys-prompt-container').classList.toggle('hidden', !e.target.checked);
+  };
 }
 
 // --- GENERATION LOGIC ---
 async function runAgent(isChain = false) {
   const key = localStorage.getItem('pollen_key');
+  console.log("Pollinations API Key found:", key ? "YES (masked)" : "NO");
+  
+  if (!key) {
+    alert("🌌 Please connect your Pollinations account first!");
+    showConnect();
+    return;
+  }
+
   const imgModel = document.getElementById('img-model').value;
   const [w, h] = document.getElementById('aspect').value.split(':');
   const seedVal = document.getElementById('seed-input').value;
@@ -237,44 +250,67 @@ async function runAgent(isChain = false) {
 
   let finalPrompt = '';
 
-  setUILoading();
-
   if (activeMode === 'classic') {
     const sysPrompt = document.getElementById('sys-prompt').value.trim();
     let userTask = document.getElementById('user-task').value.trim();
+    const useLLM = document.getElementById('use-llm').checked;
 
     if (isChain) userTask = `Continue this visual story: ${lastAgentPrompt}. Evolve it further with new surreal details.`;
-    if (!userTask) { setStatus('❌ Введи задачу!'); return; }
     
-    setStatus(isChain ? "⛓️ Продолжаю цепочку..." : "🤖 Агент пишет промпт...");
+    if (!userTask) {
+        alert('❌ Please enter a task for the agent!');
+        document.getElementById('user-task').focus();
+        return;
+    }
     
-    try {
-      const selectedModel = document.getElementById('llm-model').value;
-      const llmModel = MODEL_MAP[selectedModel] || selectedModel;
-      const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(key ? { 'Authorization': `Bearer ${key}` } : {}) },
-        body: JSON.stringify({
-          model: llmModel,
-          messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userTask }],
-          seed: seed, temperature: 0.7
-        })
-      });
-      const data = await res.json();
-      finalPrompt = data.choices[0].message.content.trim();
-    } catch (e) {
+    if (useLLM) {
+      setUILoading();
+      setStatus(isChain ? "⛓️ Продолжаю цепочку..." : "🤖 Агент пишет промпт...");
+      
+      try {
+        const selectedModel = document.getElementById('llm-model').value;
+        const llmModel = MODEL_MAP[selectedModel] || selectedModel;
+        console.log(`Sending to LLM (${llmModel}):`, userTask);
+        const res = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(key ? { 'Authorization': `Bearer ${key}` } : {}) },
+          body: JSON.stringify({
+            model: llmModel,
+            messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userTask }],
+            seed: seed, temperature: 0.7
+          })
+        });
+        const data = await res.json();
+        finalPrompt = data.choices[0].message.content.trim();
+        
+        // Show prompt immediately for debugging
+        document.getElementById('prompt-log').classList.remove('hidden');
+        document.getElementById('log-body').textContent = finalPrompt;
+        
+      } catch (e) {
+        finalPrompt = userTask;
+        setStatus('⚠️ LLM Error, using literal input');
+      }
+    } else {
+      // SKIP LLM
       finalPrompt = userTask;
-      setStatus('⚠️ LLM Error, using literal input');
+      console.log("Direct Prompt Mode:", finalPrompt);
+      setUILoading();
+      document.getElementById('prompt-log').classList.remove('hidden');
+      document.getElementById('log-body').textContent = finalPrompt;
     }
   } else {
     // BUILDER MODE
     if (!builderSelections.gender || builderSelections.pose === null) {
-      document.getElementById('placeholder').classList.remove('hidden');
-      document.getElementById('loading-state').classList.add('hidden');
       alert('⚠️ Select character gender and pose first!');
       return;
     }
-    const g = builderSelections.gender === 'male' ? 'handsom man' : 'beautiful woman';
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Processing...';
+
+    setUILoading();
+    const g = builderSelections.gender === 'male' ? 'handsome man' : 'beautiful woman';
     const p = POSES[builderSelections.pose].desc;
     const tS = builderSelections.topStyle !== null ? STYLES[builderSelections.topStyle] : null;
     const mS = builderSelections.middleStyle !== null ? STYLES[builderSelections.middleStyle] : null;
@@ -286,36 +322,54 @@ async function runAgent(isChain = false) {
     if (mS) finalPrompt += `MIDDLE: ${mS.name} (${mS.midDesc}). `;
     if (bS) finalPrompt += `BOTTOM: ${bS.name} (${bS.botDesc}). `;
     finalPrompt += `Seamless transition gradients, identical facial features, same character throughout. Atmosphere: ${atm}. Photorealistic 8k vertical.`;
+    
+    // Show prompt in Builder mode too
+    document.getElementById('prompt-log').classList.remove('hidden');
+    document.getElementById('log-body').textContent = finalPrompt;
   }
 
+  console.log("Final Prompt for Image Gen:", finalPrompt);
   // IMAGE GENERATION
   lastAgentPrompt = finalPrompt;
   setStatus('🎨 Генерирую картинку...');
   
-  const imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true`;
+  let imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true&safe=true`;
+  if (key) {
+    imgUrl += `&pollen_key=${key}&key=${key}`;
+  }
+  
+  console.log("Full Image Gen URL:", imgUrl);
   const imgElement = document.getElementById('result-img');
 
-  try {
-    // Authenticated Fetch Flow (Handling private models)
-    const imgRes = await fetch(imgUrl, { headers: { ...(key ? { 'Authorization': `Bearer ${key}` } : {}) } });
-    if (!imgRes.ok) throw new Error();
-    const blob = await imgRes.blob();
-    if (currentImageObjectUrl) URL.revokeObjectURL(currentImageObjectUrl);
-    currentImageObjectUrl = URL.createObjectURL(blob);
+  // Direct img.src assignment (Most reliable for CORS)
+  imgElement.onload = () => {
+    document.getElementById('loading-state').classList.add('hidden');
+    imgElement.classList.remove('hidden');
+    document.getElementById('img-overlay').classList.remove('hidden');
+    document.getElementById('prompt-log').classList.remove('hidden');
+    document.getElementById('log-body').textContent = finalPrompt;
+    lastImageUrl = imgUrl;
     
-    imgElement.onload = () => {
-      document.getElementById('loading-state').classList.add('hidden');
-      imgElement.classList.remove('hidden');
-      document.getElementById('img-overlay').classList.remove('hidden');
-      document.getElementById('prompt-log').classList.remove('hidden');
-      document.getElementById('log-body').textContent = finalPrompt;
-      lastImageUrl = imgUrl;
-      fetchBalance(key);
-    };
-    imgElement.src = currentImageObjectUrl;
-  } catch (e) {
-    setStatus('❌ Generation Failed. Check balance.');
-  }
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> RUN AGENT / GENERATE';
+    lucide.createIcons();
+    fetchBalance(key);
+  };
+
+  imgElement.onerror = () => {
+    console.error("Image failed to load. Full URL:", imgUrl);
+    setStatus("❌ Image load failed. Check your Pollen balance or console logs.");
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('placeholder').classList.remove('hidden');
+    
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> RUN AGENT / GENERATE';
+    lucide.createIcons();
+  };
+
+  imgElement.src = imgUrl;
 }
 
 function setUILoading() {

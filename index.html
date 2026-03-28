@@ -105,7 +105,22 @@
 
                 <!-- CLASSIC MODE PANEL -->
                 <div id="panel-classic" class="space-y-6">
-                    <div class="glass-card p-6 rounded-xl space-y-4">
+                    <!-- TOGGLE AI AGENT -->
+                    <div class="flex items-center justify-between p-3 glass-card rounded-xl border border-white/10">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="zap" class="w-5 h-5 text-yellow-500"></i>
+                            <div>
+                                <div class="text-[11px] font-black uppercase tracking-widest leading-none">Use AI Agent</div>
+                                <div class="text-[9px] text-muted-foreground mt-1">Refine your prompt with GPT-4/Gemini</div>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="use-llm" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <div id="sys-prompt-container" class="glass-card p-6 rounded-xl space-y-4">
                         <div class="flex items-center justify-between">
                             <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">System Instruction</h2>
                             <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20 font-bold uppercase">Free LLM</span>
@@ -266,7 +281,7 @@
     </div>
 
     <!-- SCRIPTS -->
-    <script src="script.js"></script>
+    <script src="script.js?v=20260328_1400"></script>
     <script>lucide.createIcons();</script>
 </body>
 </html>
