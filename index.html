@@ -8,70 +8,69 @@
     <meta property="og:title" content="Cadavre Exquis | AI Image Agent">
     <meta property="og:description" content="Generate stunning AI art with specialized agent presets.">
     <link rel="stylesheet" href="style.css">
-    <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <!-- CONNECT SCREEN -->
     <div id="connect-screen">
         <div class="icon">🌌</div>
-        <h1>Cadavre Exquis</h1>
-        <p>Expert-level AI prompt engineering.<br>LLM intelligence → Flux Meta-Generations.<br><br>Connect your Pollen to begin.</p>
+        <h1>AI Image Agent</h1>
+        <p>Задай инструкцию агенту.<br>LLM напишет промпт → Image модель сгенерирует.<br><br>Your Pollen, your usage. We pay $0.</p>
         <button class="btn-primary" id="connect-btn">
-            <i data-lucide="link"></i> Connect Pollinations
+            <i data-lucide="link"></i> Connect Pollinations Account
         </button>
-        <div class="note">Secure OAuth via enter.pollinations.ai</div>
+        <div class="note">Takes 10 seconds. You'll return here automatically.</div>
     </div>
 
     <!-- APP SCREEN -->
     <div id="app" class="hidden">
         <header>
-            <div class="logo">🌌 <span>Cadavre Exquis</span></div>
+            <div class="logo">🤖 <span>AI Image Agent</span></div>
             <div class="header-right">
-                <div class="badge" id="badge">Connecting...</div>
+                <div class="badge" id="badge">🔌 — Pollen</div>
                 <div class="disconnect" id="disconnect-btn">Disconnect</div>
             </div>
         </header>
 
         <div class="card">
-            <div class="card-title"><i data-lucide="settings"></i> <span>Agent Instructions</span> <span class="free-badge">FREE</span></div>
+            <div class="card-title"><i data-lucide="settings"></i> ⚙️ <span>Инструкция агента</span> (System Prompt) <span class="free-badge">🆓 бесплатно</span></div>
             <div class="presets" id="presets">
-                <button class="preset-btn active" data-id="cadavre">Metamorphosis</button>
-                <button class="preset-btn" data-id="realism">Photorealism</button>
-                <button class="preset-btn" data-id="anime">Anime Core</button>
-                <button class="preset-btn" data-id="concept">World Build</button>
-                <button class="preset-btn" data-id="logo">Identity</button>
-                <button class="preset-btn" data-id="product">Product</button>
-                <button class="preset-btn" data-id="custom">Custom</button>
+                <button class="preset-btn active" data-id="cadavre">🌸 Cadavre Exquis</button>
+                <button class="preset-btn" data-id="realism">📷 Реализм</button>
+                <button class="preset-btn" data-id="anime">🎌 Аниме</button>
+                <button class="preset-btn" data-id="concept">🎨 Concept Art</button>
+                <button class="preset-btn" data-id="logo">💎 Логотип</button>
+                <button class="preset-btn" data-id="product">📦 Продукт</button>
+                <button class="preset-btn" data-id="custom">✏️ Свой</button>
             </div>
-            <textarea id="sys-prompt" placeholder="Define the AI's creative persona..."></textarea>
+            <textarea id="sys-prompt" placeholder="Инструкция для LLM..."></textarea>
         </div>
 
         <div class="card">
-            <div class="card-title"><i data-lucide="message-square"></i> <span>Visual Goal</span></div>
-            <textarea id="user-task" placeholder="Describe your vision in plain language... I will engineer the details." style="min-height:90px"></textarea>
+            <div class="card-title"><i data-lucide="message-square"></i> 💬 <span>Задача пользователя</span></div>
+            <textarea id="user-task" placeholder="Что нужно сгенерировать? Опиши своими словами..." style="min-height:80px"></textarea>
             
             <div class="settings-row">
                 <div>
-                    <label>Intelligence <span class="free-badge">FREE</span></label>
+                    <label>LLM <span class="free-badge">🆓</span></label>
                     <select id="llm-model">
-                        <option value="gemini">Gemini (Ultra Quality)</option>
-                        <option value="grok">Grok (Experimental)</option>
-                        <option value="openai" selected>GPT-4o (Standard)</option>
-                        <option value="claude">Claude (Creative)</option>
-                        <option value="mistral">Mistral (Fast)</option>
+                        <option value="gemini">Gemini (рекомендуется)</option>
+                        <option value="grok">Grok</option>
+                        <option value="openai" selected>OpenAI GPT-4o</option>
+                        <option value="claude">Claude</option>
+                        <option value="mistral">Mistral (быстрый)</option>
                     </select>
                 </div>
                 <div>
-                    <label>Generator</label>
+                    <label>Image Model</label>
                     <select id="img-model">
                         <option value="flux">Flux (High Detail)</option>
-                        <option value="zimage">Turbo (Instant)</option>
-                        <option value="grok-imagine">Grok Imagine (Vibrant)</option>
-                        <option value="nanobanana-2">Banana 2 (Artistic)</option>
-                        <option value="gptimage">GPT Image (Semantic)</option>
-                        <option value="seedream5">Seedream 5 (Surreal)</option>
-                        <option value="klein">Klein (Efficient)</option>
+                        <option value="zimage">⭐ Z-Image Turbo</option>
+                        <option value="grok-imagine">Grok Imagine</option>
+                        <option value="nanobanana-2">Nano Banana 2</option>
+                        <option value="gptimage">GPT Image</option>
+                        <option value="seedream5">Seedream 5</option>
+                        <option value="klein">Klein (дешевле)</option>
                     </select>
                 </div>
             </div>
@@ -88,8 +87,8 @@
                     </select>
                 </div>
                 <div>
-                    <label>Entropy (Seed)</label>
-                    <input type="number" id="seed-input" placeholder="Randomized" min="1" max="999999">
+                    <label>Seed (пусто = random)</label>
+                    <input type="number" id="seed-input" placeholder="e.g. 42137" min="1" max="999999">
                 </div>
             </div>
         </div>
@@ -100,8 +99,9 @@
 
         <div id="output">
             <div class="placeholder-msg" id="placeholder">
-                <div class="big">🎨</div> 
-                <span>Agent idle. Awaiting creative input.</span>
+                <div class="big">🤖</div> 
+                <span>Агент ждёт задачу</span><br>
+                <small style="opacity:0.6">LLM (бесплатно) → промпт → картинка</small>
             </div>
             <div class="spinner hidden" id="spinner"></div>
             <div class="status-msg hidden" id="status"></div>
@@ -109,7 +109,7 @@
             <div class="img-overlay hidden" id="img-overlay">
                 <button class="tool-btn" id="dl-btn"><i data-lucide="download"></i> Save</button>
                 <button class="tool-btn" id="cp-btn"><i data-lucide="copy"></i> Copy</button>
-                <button class="tool-btn" id="chain-btn"><i data-lucide="git-branch"></i> Evolve (Chain)</button>
+                <button class="tool-btn" id="chain-btn"><i data-lucide="git-branch"></i> ⛓️ Chain (Cadavre)</button>
                 <button class="tool-btn" id="regen-btn"><i data-lucide="refresh-cw"></i> Retry</button>
             </div>
         </div>
@@ -122,12 +122,11 @@
             <div class="prompt-log-body" id="log-body"></div>
         </div>
 
-        <footer>Powered by <a href="https://pollinations.ai" target="_blank">pollinations.ai</a> | <span style="opacity:0.6">Elite Edition v1.2</span></footer>
+        <footer>Powered by <a href="https://pollinations.ai" target="_blank">pollinations.ai</a></footer>
     </div>
 
     <script src="script.js"></script>
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
     </script>
 </body>

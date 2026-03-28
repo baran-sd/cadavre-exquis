@@ -1,7 +1,7 @@
 /**
- * AI Image Agent - Core Logic
+ * AI Image Agent - Core Logic (Elite Version)
  * Based on original code by baran-sd
- * Upgraded with Chain Generation (Cadavre Exquis) & Premium Experience
+ * Fully restored Cadavre Exquis instructions & Z-Image support
  */
 
 const PRESETS = {
@@ -14,9 +14,8 @@ const PRESETS = {
   custom: ''
 };
 
-// Maps internal model labels to Pollinations AI actual model IDs
 const MODEL_MAP = {
-  'gemini': 'p7',  
+  'gemini': 'p7',
   'grok': 'openai', 
   'openai': 'openai',
   'claude': 'claude',
@@ -42,7 +41,7 @@ function init() {
     showConnect();
   }
   initPresets();
-  setupChainButton();
+  setupEventListeners();
 }
 
 function showConnect() {
@@ -63,27 +62,52 @@ async function fetchBalance(key) {
     const r = await fetch('https://gen.pollinations.ai/account/balance', {
       headers: { Authorization: `Bearer ${key}` }
     });
+    if (!r.ok) throw new Error('Balance API error');
     const d = await r.json();
-    document.getElementById('badge').textContent = `${d.balance} Pollen`;
+    // Safety check for balance field
+    const bal = d.balance !== undefined ? d.balance : (d.pollen !== undefined ? d.pollen : '—');
+    document.getElementById('badge').textContent = `🔌 ${bal} Pollen`;
   } catch (e) {
     console.error('Balance fetch failed', e);
+    document.getElementById('badge').textContent = '🔌 — Pollen';
   }
 }
 
-// --- Event Listeners ---
-document.getElementById('connect-btn').onclick = () => {
-  const redirectUrl = encodeURIComponent(location.href);
-  location.href = `https://enter.pollinations.ai/authorize?redirect_url=${redirectUrl}&app_key=pk_WEQH2XRadxYUEgQt&models=zimage,flux,grok-imagine,nanobanana-2,gptimage,seedream5,klein&budget=100&expiry=30`;
-};
+function setupEventListeners() {
+    document.getElementById('connect-btn').onclick = () => {
+        const redirectUrl = encodeURIComponent(location.href);
+        location.href = `https://enter.pollinations.ai/authorize?redirect_url=${redirectUrl}&app_key=pk_WEQH2XRadxYUEgQt&models=zimage,flux,grok-imagine,nanobanana-2,gptimage,seedream5,klein&budget=100&expiry=30`;
+    };
 
-document.getElementById('disconnect-btn').onclick = () => {
-  localStorage.removeItem('pollen_key');
-  location.reload();
-};
+    document.getElementById('disconnect-btn').onclick = () => {
+        localStorage.removeItem('pollen_key');
+        location.reload();
+    };
+
+    document.getElementById('gen-btn').onclick = () => runAgent();
+    document.getElementById('regen-btn').onclick = () => runAgent();
+    document.getElementById('chain-btn').onclick = () => runAgent(true);
+
+    document.getElementById('dl-btn').onclick = () => window.open(lastImageUrl);
+    document.getElementById('cp-btn').onclick = () => {
+        navigator.clipboard.writeText(lastImageUrl);
+        const b = document.getElementById('cp-btn');
+        const t = b.innerHTML;
+        b.innerHTML = '<i data-lucide="check"></i> Copied!';
+        lucide.createIcons();
+        setTimeout(() => { b.innerHTML = t; lucide.createIcons(); }, 2000);
+    };
+
+    document.getElementById('log-toggle').onclick = () => {
+        const body = document.getElementById('log-body');
+        const arrow = document.getElementById('log-arrow');
+        body.classList.toggle('open');
+        arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+    };
+}
 
 function initPresets() {
   const pst = document.querySelectorAll('.preset-btn');
-  if (!pst.length) return;
   pst.forEach(btn => {
     btn.onclick = () => {
       pst.forEach(b => b.classList.remove('active'));
@@ -95,9 +119,6 @@ function initPresets() {
   });
 }
 
-document.getElementById('gen-btn').onclick = () => runAgent();
-
-// Polyfill for AbortSignal.timeout
 function getTimeoutSignal(ms) {
     if (AbortSignal.timeout) return AbortSignal.timeout(ms);
     const controller = new AbortController();
@@ -112,8 +133,7 @@ async function runAgent(isChain = false) {
   const selectedModel = document.getElementById('llm-model').value;
   const llmModel = MODEL_MAP[selectedModel] || selectedModel;
   
-  const imgModelInput = document.getElementById('img-model').value;
-  const imgModel = imgModelInput === 'zimage' ? 'turbo' : imgModelInput;
+  const imgModel = document.getElementById('img-model').value;
   
   const [w, h] = document.getElementById('aspect').value.split(':');
   const seedVal = document.getElementById('seed-input').value;
@@ -127,7 +147,7 @@ async function runAgent(isChain = false) {
           setStatus('⚠️ Start with a base image first!');
           return;
       }
-      userTask = `Now evolve this visual description: "${lastAgentPrompt}". Transform the scene further, add more surreal details, and maintain the Cadavre Exquis metamorphosis.`;
+      userTask = `Continue the visual story based on this previous scene: ${lastAgentPrompt}. Evolve it further with new surreal details while maintaining the tri-style metamorphosis logic.`;
   }
 
   if (!userTask) {
@@ -139,9 +159,9 @@ async function runAgent(isChain = false) {
   btn.disabled = true;
   setUILoading();
   
-  const statusMsg = isChain ? "⛓️ Chaining metamorphosis..." : `🤖 Prompting ${selectedModel}...`;
+  const statusMsg = isChain ? "⛓️ Агент продолжает цепочку..." : `🤖 ${selectedModel} пишет промпт...`;
   setStatus(statusMsg);
-  btn.innerHTML = isChain ? '<span class="loading-spin"></span> Chaining...' : '<span class="loading-spin"></span> Writing...';
+  btn.innerHTML = '<span class="loading-spin"></span> Processing...';
 
   let finalPrompt = '';
   try {
@@ -154,7 +174,7 @@ async function runAgent(isChain = false) {
       body: JSON.stringify({
         model: llmModel,
         messages: [
-          { role: 'system', content: sysPrompt || 'You are an expert image prompt engineer. Return ONLY the enhanced prompt.' },
+          { role: 'system', content: sysPrompt || 'You are an expert image prompt engineer.' },
           { role: 'user', content: userTask }
         ],
         seed: seed,
@@ -163,10 +183,7 @@ async function runAgent(isChain = false) {
       signal: getTimeoutSignal(35000)
     });
 
-    if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(`LLM Error ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`LLM Error ${res.status}`);
 
     const data = await res.json();
     finalPrompt = data.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
@@ -174,12 +191,11 @@ async function runAgent(isChain = false) {
   } catch (e) {
     console.error('LLM Failed', e);
     finalPrompt = userTask;
-    setStatus('⚠️ LLM Error - Using original task');
+    setStatus('⚠️ LLM ошибка, использую оригинал...');
   }
   
   lastAgentPrompt = finalPrompt;
-  setStatus('🎨 Generating visual masterpiece...');
-  btn.innerHTML = '<span class="loading-spin"></span> Painting...';
+  setStatus('🎨 Генерирую картинку...');
   
   const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true`;
   const imgElement = document.getElementById('result-img');
@@ -193,24 +209,21 @@ async function runAgent(isChain = false) {
     document.getElementById('log-body').textContent = finalPrompt;
     
     btn.disabled = false;
-    btn.innerHTML = '✨ Run Agent';
+    btn.innerHTML = '<i data-lucide="sparkles"></i>✨ Run Agent';
+    lucide.createIcons();
     fetchBalance(key);
   };
 
   imgElement.onerror = () => {
     document.getElementById('spinner').classList.add('hidden');
-    setStatus('❌ Generation Error');
+    setStatus('❌ Ошибка загрузки');
     btn.disabled = false;
-    btn.innerHTML = '✨ Run Agent';
+    btn.innerHTML = '<i data-lucide="sparkles"></i>✨ Run Agent';
+    lucide.createIcons();
   };
 
   imgElement.src = imgUrl;
   lastImageUrl = imgUrl;
-}
-
-function setupChainButton() {
-    document.getElementById('chain-btn').onclick = () => runAgent(true);
-    document.getElementById('regen-btn').onclick = () => runAgent();
 }
 
 function setUILoading() {
@@ -225,21 +238,5 @@ function setUILoading() {
 function setStatus(msg) {
   document.getElementById('status').textContent = msg;
 }
-
-document.getElementById('dl-btn').onclick = () => window.open(lastImageUrl);
-document.getElementById('cp-btn').onclick = () => {
-  navigator.clipboard.writeText(lastImageUrl);
-  const b = document.getElementById('cp-btn');
-  const t = b.innerHTML;
-  b.innerHTML = '✅ Copied!';
-  setTimeout(() => b.innerHTML = t, 2000);
-};
-
-document.getElementById('log-toggle').onclick = () => {
-  const body = document.getElementById('log-body');
-  const arrow = document.getElementById('log-arrow');
-  body.classList.toggle('open');
-  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
-};
 
 init();
