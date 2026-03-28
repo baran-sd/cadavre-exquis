@@ -1,134 +1,272 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadavre Exquis | AI Image Agent</title>
-    <meta name="description" content="AI Image Agent powered by Pollinations.ai. Multi-modal prompt engineering and image generation.">
-    <meta property="og:title" content="Cadavre Exquis | AI Image Agent">
-    <meta property="og:description" content="Generate stunning AI art with specialized agent presets.">
-    <link rel="stylesheet" href="style.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(240 3.7% 15.9%)",
+                        background: "hsl(240 10% 3.9%)",
+                        foreground: "hsl(0 0% 98%)",
+                        primary: {
+                            DEFAULT: "hsl(0 0% 98%)",
+                            foreground: "hsl(240 5.9% 10%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(240 3.7% 15.9%)",
+                            foreground: "hsl(0 0% 98%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(240 3.7% 15.9%)",
+                            foreground: "hsl(240 5% 64.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(240 3.7% 15.9%)",
+                            foreground: "hsl(0 0% 98%)",
+                        },
+                        popover: {
+                            DEFAULT: "hsl(240 10% 3.9%)",
+                            foreground: "hsl(0 0% 98%)",
+                        },
+                        card: {
+                            DEFAULT: "hsl(240 10% 3.9%)",
+                            foreground: "hsl(0 0% 98%)",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "0.5rem",
+                        md: "calc(0.5rem - 2px)",
+                        sm: "calc(0.5rem - 4px)",
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(9, 9, 11, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(39, 39, 42, 1); }
+        .hidden { display: none !important; }
+        .btn-selected { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; color: #60a5fa !important; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+        .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animations */
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.4s ease-out; }
+    </style>
 </head>
-<body>
+<body class="bg-background text-foreground min-h-screen flex flex-col items-center justify-center p-4">
+
     <!-- CONNECT SCREEN -->
-    <div id="connect-screen">
-        <div class="icon">🌌</div>
-        <h1>AI Image Agent</h1>
-        <p>Задай инструкцию агенту.<br>LLM напишет промпт → Image модель сгенерирует.<br><br>Your Pollen, your usage. We pay $0.</p>
-        <button class="btn-primary" id="connect-btn">
-            <i data-lucide="link"></i> Connect Pollinations Account
+    <div id="connect-screen" class="max-w-md w-full glass-card p-10 rounded-2xl text-center space-y-6 shadow-2xl animate-fade-in">
+        <div class="text-6xl mb-4">🌌</div>
+        <h1 class="text-3xl font-extrabold tracking-tight">AI Image Agent</h1>
+        <p class="text-muted-foreground leading-relaxed">
+            Задай инструкцию агенту.<br>LLM напишет промпт → Image модель сгенерирует.
+        </p>
+        <button id="connect-btn" class="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 transition-all">
+            <i data-lucide="link" class="w-5 h-5"></i> Connect Pollinations Account
         </button>
-        <div class="note">Takes 10 seconds. You'll return here automatically.</div>
+        <div class="text-xs text-muted-foreground opacity-70 italic">Takes 10 seconds. You'll return here automatically.</div>
     </div>
 
-    <!-- APP SCREEN -->
-    <div id="app" class="hidden">
-        <header>
-            <div class="logo">🤖 <span>AI Image Agent</span></div>
-            <div class="header-right">
-                <a href="example.html" class="badge" style="text-decoration:none; background:rgba(255,107,107,0.2); border:1px solid #ff6b6b; color:#ff6b6b">🎭 Exquis Builder</a>
-                <div class="badge" id="badge">🔌 — Pollen</div>
-                <div class="disconnect" id="disconnect-btn">Disconnect</div>
+    <!-- MAIN APP SCREEN -->
+    <div id="app" class="hidden w-full max-w-6xl flex flex-col gap-6 animate-fade-in">
+        <header class="flex justify-between items-center py-2 px-1">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">🤖 AGENT</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="badge" class="bg-secondary text-xs font-semibold py-1.5 px-3 rounded-full border border-border">🔌 — Pollen</div>
+                <button id="disconnect-btn" class="text-xs text-muted-foreground hover:text-red-400 transition-colors uppercase tracking-widest font-bold">Disconnect</button>
             </div>
         </header>
 
-        <div class="card">
-            <div class="card-title"><i data-lucide="settings"></i> ⚙️ <span>Инструкция агента</span> (System Prompt) <span class="free-badge">🆓 бесплатно</span></div>
-            <div class="presets" id="presets">
-                <button class="preset-btn active" data-id="cadavre">🌸 Cadavre Exquis</button>
-                <button class="preset-btn" data-id="realism">📷 Реализм</button>
-                <button class="preset-btn" data-id="anime">🎌 Аниме</button>
-                <button class="preset-btn" data-id="concept">🎨 Concept Art</button>
-                <button class="preset-btn" data-id="logo">💎 Логотип</button>
-                <button class="preset-btn" data-id="product">📦 Продукт</button>
-                <button class="preset-btn" data-id="custom">✏️ Свой</button>
-            </div>
-            <textarea id="sys-prompt" placeholder="Инструкция для LLM..."></textarea>
-        </div>
-
-        <div class="card">
-            <div class="card-title"><i data-lucide="message-square"></i> 💬 <span>Задача пользователя</span></div>
-            <textarea id="user-task" placeholder="Что нужно сгенерировать? Опиши своими словами..." style="min-height:80px"></textarea>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <div class="settings-row">
-                <div>
-                    <label>LLM <span class="free-badge">🆓</span></label>
-                    <select id="llm-model">
-                        <option value="gemini">Gemini (рекомендуется)</option>
-                        <option value="grok">Grok</option>
-                        <option value="openai" selected>OpenAI GPT-4o</option>
-                        <option value="claude">Claude</option>
-                        <option value="mistral">Mistral (быстрый)</option>
-                    </select>
+            <!-- LEFT COLUMN: INPUTS -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- MODE TABS -->
+                <div class="flex p-1 bg-secondary rounded-lg w-fit">
+                    <button id="tab-classic" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all bg-background shadow-sm">Classic Agent</button>
+                    <button id="tab-builder" class="px-4 py-1.5 rounded-md text-sm font-medium transition-all text-muted-foreground hover:text-foreground">Cadavre Builder</button>
                 </div>
-                <div>
-                    <label>Image Model</label>
-                    <select id="img-model">
-                        <option value="flux">Flux (High Detail)</option>
-                        <option value="zimage">⭐ Z-Image Turbo</option>
-                        <option value="grok-imagine">Grok Imagine</option>
-                        <option value="nanobanana-2">Nano Banana 2</option>
-                        <option value="gptimage">GPT Image</option>
-                        <option value="seedream5">Seedream 5</option>
-                        <option value="klein">Klein (дешевле)</option>
-                    </select>
+
+                <!-- CLASSIC MODE PANEL -->
+                <div id="panel-classic" class="space-y-6">
+                    <div class="glass-card p-6 rounded-xl space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">System Instruction</h2>
+                            <span class="text-[10px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20 font-bold uppercase">Free LLM</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 pb-2">
+                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all active" data-id="cadavre">Cadavre Exquis</button>
+                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="realism">Realism</button>
+                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="anime">Anime</button>
+                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="concept">Concept Art</button>
+                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="logo">Logo</button>
+                            <button class="preset-btn px-3 py-1 rounded-full border border-border text-xs font-medium hover:border-muted-foreground transition-all" data-id="custom">Custom</button>
+                        </div>
+                        <textarea id="sys-prompt" class="w-full bg-black/40 border border-border rounded-lg p-4 text-sm text-secondary-foreground focus:border-blue-500/50 outline-none transition-all min-h-[120px]" placeholder="Explain how the agent should think..."></textarea>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-xl space-y-4">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">What to generate?</h2>
+                        <textarea id="user-task" class="w-full bg-black/40 border border-border rounded-lg p-4 text-[15px] focus:border-blue-500/50 outline-none transition-all min-h-[80px]" placeholder="Describe your vision in plain words..."></textarea>
+                    </div>
                 </div>
+
+                <!-- BUILDER MODE PANEL (HIDDEN BY DEFAULT) -->
+                <div id="panel-builder" class="hidden space-y-6">
+                    <!-- GENDER -->
+                    <div class="glass-card p-4 rounded-xl space-y-3">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">Character Gender</h2>
+                        <div class="flex gap-4 justify-center">
+                            <button id="genderMale" class="gender-btn flex-1 glass-card p-3 rounded-lg flex flex-col items-center gap-1 hover:bg-secondary/50 transition-all border-2 border-transparent" onclick="selectGender('male')">
+                                <span class="text-2xl">🧔</span>
+                                <span class="text-xs font-medium">Male</span>
+                            </button>
+                            <button id="genderFemale" class="gender-btn flex-1 glass-card p-3 rounded-lg flex flex-col items-center gap-1 hover:bg-secondary/50 transition-all border-2 border-transparent" onclick="selectGender('female')">
+                                <span class="text-2xl">👩</span>
+                                <span class="text-xs font-medium">Female</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- POSE -->
+                    <div class="glass-card p-4 rounded-xl space-y-3">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-muted-foreground">Action / Pose</h2>
+                        <div id="poseGrid" class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                            <!-- JS Inject -->
+                        </div>
+                    </div>
+
+                    <!-- BODY ZONES -->
+                    <div class="space-y-4">
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-red-500/50">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-red-400 mb-3">Top Zone (Head/Chest)</h2>
+                            <div id="topStyle" class="grid grid-cols-3 sm:grid-cols-6 gap-2"></div>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-blue-500/50">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-3">Middle Zone (Torso/Hips)</h2>
+                            <div id="middleStyle" class="grid grid-cols-3 sm:grid-cols-6 gap-2"></div>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-green-500/50">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-green-400 mb-3">Bottom Zone (Legs/Feet)</h2>
+                            <div id="bottomStyle" class="grid grid-cols-3 sm:grid-cols-6 gap-2"></div>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl">
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-yellow-400 mb-3">Atmosphere</h2>
+                            <div id="atmGrid" class="grid grid-cols-4 gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COMMON MODEL SETTINGS -->
+                <div class="glass-card p-6 rounded-xl">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-muted-foreground p-1">LLM Model</label>
+                            <select id="llm-model" class="w-full bg-black/40 border border-border rounded-lg p-2 text-sm outline-none">
+                                <option value="gemini">Gemini Pro</option>
+                                <option value="grok">Grok Beta</option>
+                                <option value="openai" selected>GPT-4o</option>
+                                <option value="claude">Claude 3.5</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-muted-foreground p-1">Image Model</label>
+                            <select id="img-model" class="w-full bg-black/40 border border-border rounded-lg p-2 text-sm outline-none font-bold text-blue-400">
+                                <option value="zimage" selected>⭐ Z-Image Turbo</option>
+                                <option value="flux">Flux.1 Pro</option>
+                                <option value="grok-imagine">Grok Imagine</option>
+                                <option value="nanobanana-2">Nano Banana</option>
+                                <option value="gptimage">GPT Image</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-muted-foreground p-1">Aspect Ratio</label>
+                            <select id="aspect" class="w-full bg-black/40 border border-border rounded-lg p-2 text-sm outline-none">
+                                <option value="1024:1024">1:1 Square</option>
+                                <option value="1024:1792" selected>9:16 Tall</option>
+                                <option value="1792:1024">16:9 Cinema</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-muted-foreground p-1">Seed</label>
+                            <input type="number" id="seed-input" class="w-full bg-black/40 border border-border rounded-lg p-2 text-sm outline-none" placeholder="Random">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="gen-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-black text-lg shadow-lg shadow-blue-900/20 transform transition-all active:scale-95 flex items-center justify-center gap-3">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i> RUN AGENT / GENERATE
+                </button>
+
             </div>
-            
-            <div class="settings-row">
-                <div>
-                    <label>Aspect Ratio</label>
-                    <select id="aspect">
-                        <option value="1024:1024">1:1 Square</option>
-                        <option value="1024:576" selected>16:9 Cinema</option>
-                        <option value="576:1024">9:16 Story</option>
-                        <option value="768:1024">3:4 Portrait</option>
-                        <option value="1024:768">4:3 Desktop</option>
-                    </select>
+
+            <!-- RIGHT COLUMN: RESULTS -->
+            <div class="lg:col-span-5 space-y-6 sticky top-6">
+                
+                <div id="output-card" class="glass-card rounded-2xl overflow-hidden min-h-[400px] flex flex-col items-center justify-center relative bg-black/20 group">
+                    
+                    <!-- EMPTY STATE -->
+                    <div id="placeholder" class="text-center space-y-4 p-10 opacity-40">
+                        <div class="text-7xl">🎴</div>
+                        <div class="text-sm font-bold uppercase tracking-widest leading-loose">Waiting for generation...<br><span class="text-[10px] opacity-60">LLM (Free) → Image Generation</span></div>
+                    </div>
+
+                    <!-- LOADING STATE (Skeleton) -->
+                    <div id="loading-state" class="hidden w-full h-full flex flex-col items-center justify-center p-12 space-y-8 animate-pulse">
+                        <div class="w-full max-w-[300px] aspect-[9/16] bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center">
+                            <div class="w-12 h-12 border-4 border-t-blue-500 border-white/5 rounded-full animate-spin"></div>
+                        </div>
+                        <div id="status" class="text-xs font-black text-blue-400 tracking-[0.3em] uppercase">Initializing...</div>
+                    </div>
+
+                    <!-- RESULT IMAGE -->
+                    <img id="result-img" class="hidden w-full h-full object-contain" src="" alt="AI Result">
+
+                    <!-- OVERLAY ACTIONS -->
+                    <div id="img-overlay" class="hidden absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 to-transparent flex flex-wrap gap-2 transition-opacity opacity-0 group-hover:opacity-100">
+                        <button id="dl-btn" class="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2"><i data-lucide="download" class="w-3.5 h-3.5"></i> Save</button>
+                        <button id="cp-btn" class="flex-1 bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2"><i data-lucide="copy" class="w-3.5 h-3.5"></i> Link</button>
+                        <button id="chain-btn" class="w-full bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 py-3 rounded-lg text-xs font-black text-blue-400 flex items-center justify-center gap-2 mt-2"><i data-lucide="git-branch" class="w-4 h-4"></i> CONTINUE CHAIN</button>
+                    </div>
                 </div>
-                <div>
-                    <label>Seed (пусто = random)</label>
-                    <input type="number" id="seed-input" placeholder="e.g. 42137" min="1" max="999999">
+
+                <!-- LOGS -->
+                <div id="prompt-log" class="hidden glass-card rounded-xl overflow-hidden animate-fade-in">
+                    <button id="log-toggle" class="w-full p-4 flex justify-between items-center hover:bg-white/5 transition-colors">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-3.5 h-3.5"></i> Engineered Prompt
+                        </span>
+                        <span id="log-arrow">▼</span>
+                    </button>
+                    <div id="log-body" class="p-4 pt-0 text-xs text-muted-foreground leading-relaxed bg-black/40 border-t border-border whitespace-pre-wrap"></div>
                 </div>
+
+                <footer class="text-center text-[10px] text-muted-foreground/40 font-bold uppercase tracking-[0.2em] pt-4">
+                    Powered by pollinations.ai
+                </footer>
+
             </div>
         </div>
-
-        <button class="btn-primary" id="gen-btn">
-            <i data-lucide="sparkles"></i> ✨ Run Agent
-        </button>
-
-        <div id="output">
-            <div class="placeholder-msg" id="placeholder">
-                <div class="big">🤖</div> 
-                <span>Агент ждёт задачу</span><br>
-                <small style="opacity:0.6">LLM (бесплатно) → промпт → картинка</small>
-            </div>
-            <div class="spinner hidden" id="spinner"></div>
-            <div class="status-msg hidden" id="status"></div>
-            <img id="result-img" class="hidden" alt="AI Meta-Art Result">
-            <div class="img-overlay hidden" id="img-overlay">
-                <button class="tool-btn" id="dl-btn"><i data-lucide="download"></i> Save</button>
-                <button class="tool-btn" id="cp-btn"><i data-lucide="copy"></i> Copy</button>
-                <button class="tool-btn" id="chain-btn"><i data-lucide="git-branch"></i> ⛓️ Chain (Cadavre)</button>
-                <button class="tool-btn" id="regen-btn"><i data-lucide="refresh-cw"></i> Retry</button>
-            </div>
-        </div>
-
-        <div class="prompt-log hidden" id="prompt-log">
-            <div class="prompt-log-header" id="log-toggle">
-                <b><i data-lucide="terminal" style="display:inline; width:14px; margin-right:5px"></i> Engineered Prompt</b>
-                <span id="log-arrow">▼</span>
-            </div>
-            <div class="prompt-log-body" id="log-body"></div>
-        </div>
-
-        <footer>Powered by <a href="https://pollinations.ai" target="_blank">pollinations.ai</a></footer>
     </div>
 
+    <!-- SCRIPTS -->
     <script src="script.js"></script>
-    <script>
-        lucide.createIcons();
-    </script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
