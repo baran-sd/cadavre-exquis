@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadavre Exquis | AI Image Agent</title>
+    <title>Cadavre Exquis Atelier | Collage Surrealism</title>
+    <link rel="icon" href="data:,">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -14,32 +15,32 @@
             theme: {
                 extend: {
                     colors: {
-                        border: "hsl(240 3.7% 15.9%)",
-                        background: "hsl(240 10% 3.9%)",
-                        foreground: "hsl(0 0% 98%)",
+                        border: "hsl(35 18% 78%)",
+                        background: "hsl(40 35% 96%)",
+                        foreground: "hsl(230 15% 12%)",
                         primary: {
-                            DEFAULT: "hsl(0 0% 98%)",
-                            foreground: "hsl(240 5.9% 10%)",
+                            DEFAULT: "hsl(230 15% 12%)",
+                            foreground: "hsl(40 35% 96%)",
                         },
                         secondary: {
-                            DEFAULT: "hsl(240 3.7% 15.9%)",
-                            foreground: "hsl(0 0% 98%)",
+                            DEFAULT: "hsl(38 30% 92%)",
+                            foreground: "hsl(230 15% 12%)",
                         },
                         muted: {
-                            DEFAULT: "hsl(240 3.7% 15.9%)",
-                            foreground: "hsl(240 5% 64.9%)",
+                            DEFAULT: "hsl(38 30% 92%)",
+                            foreground: "hsl(220 10% 35%)",
                         },
                         accent: {
-                            DEFAULT: "hsl(240 3.7% 15.9%)",
-                            foreground: "hsl(0 0% 98%)",
+                            DEFAULT: "hsl(35 18% 86%)",
+                            foreground: "hsl(230 15% 12%)",
                         },
                         popover: {
-                            DEFAULT: "hsl(240 10% 3.9%)",
-                            foreground: "hsl(0 0% 98%)",
+                            DEFAULT: "hsl(40 35% 96%)",
+                            foreground: "hsl(230 15% 12%)",
                         },
                         card: {
-                            DEFAULT: "hsl(240 10% 3.9%)",
-                            foreground: "hsl(0 0% 98%)",
+                            DEFAULT: "hsl(40 35% 96%)",
+                            foreground: "hsl(230 15% 12%)",
                         },
                     },
                     borderRadius: {
@@ -52,11 +53,113 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .glass-card { background: rgba(9, 9, 11, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(39, 39, 42, 1); }
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;800&family=Special+Elite&display=swap');
+
+        :root{
+            --paper: hsl(40 35% 96%);
+            --paper-2: hsl(38 30% 92%);
+            --ink: hsl(230 15% 12%);
+            --ink-soft: hsl(220 10% 35%);
+            --border: hsl(35 18% 78%);
+            --rust: hsl(10 55% 38%);
+            --prussian: hsl(210 52% 24%);
+            --tape: rgba(245, 232, 190, 0.65);
+        }
+
+        body { font-family: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+        .typewriter { font-family: 'Special Elite', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        .mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+        /* Paper desk background */
+        body::before{
+            content:"";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+              radial-gradient(1200px 800px at 20% 10%, rgba(255,255,255,0.65), transparent 60%),
+              radial-gradient(1000px 700px at 90% 20%, rgba(180,120,70,0.10), transparent 55%),
+              radial-gradient(900px 900px at 40% 90%, rgba(30,40,70,0.06), transparent 55%),
+              repeating-linear-gradient(0deg, rgba(20,20,20,0.018) 0 2px, rgba(0,0,0,0.0) 2px 6px),
+              linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+            filter: saturate(0.95) contrast(1.02);
+        }
+
+        /* Collage card: paper, ink, torn-ish edges */
+        .glass-card {
+            position: relative;
+            background:
+              linear-gradient(180deg, rgba(255,255,255,0.70), rgba(255,255,255,0.35)),
+              radial-gradient(600px 200px at 30% 0%, rgba(255,255,255,0.55), transparent 70%),
+              var(--paper);
+            color: var(--ink);
+            border: 1px solid rgba(0,0,0,0.10);
+            box-shadow:
+              0 18px 50px rgba(10, 10, 10, 0.15),
+              0 2px 0 rgba(0,0,0,0.06),
+              inset 0 1px 0 rgba(255,255,255,0.65);
+            backdrop-filter: none;
+        }
+        .glass-card::after{
+            content:"";
+            position:absolute;
+            inset:-1px;
+            pointer-events:none;
+            background:
+              radial-gradient(10px 10px at 10% 8%, rgba(0,0,0,0.10), transparent 60%),
+              radial-gradient(12px 12px at 90% 12%, rgba(0,0,0,0.08), transparent 60%),
+              radial-gradient(14px 14px at 15% 92%, rgba(0,0,0,0.08), transparent 60%),
+              radial-gradient(10px 10px at 88% 88%, rgba(0,0,0,0.07), transparent 60%);
+            mix-blend-mode: multiply;
+            opacity: 0.35;
+            border-radius: inherit;
+        }
+
         .hidden { display: none !important; }
-        .btn-selected { border-color: #3b82f6 !important; background-color: rgba(59, 130, 246, 0.1) !important; color: #60a5fa !important; }
+
+        /* Cut-out label buttons + stamp selection */
+        .gender-btn{ position: relative; overflow: hidden; }
+        .gender-btn::before{
+            content:"";
+            position:absolute;
+            top:-10px;
+            left:12px;
+            width:64px;
+            height:22px;
+            background: var(--tape);
+            border: 1px solid rgba(0,0,0,0.10);
+            transform: rotate(-7deg);
+            filter: blur(0.1px);
+            opacity: 0.75;
+        }
+
+        .btn-selected {
+            border-color: rgba(0,0,0,0.45) !important;
+            background:
+              radial-gradient(120px 60px at 30% 20%, rgba(255,255,255,0.65), transparent 70%),
+              linear-gradient(180deg, rgba(220, 40, 30, 0.10), rgba(220, 40, 30, 0.04)),
+              var(--paper) !important;
+            color: var(--ink) !important;
+            box-shadow:
+              0 10px 24px rgba(0,0,0,0.14),
+              inset 0 0 0 2px rgba(130, 20, 15, 0.12) !important;
+        }
+        .btn-selected::after{
+            content:"APPROVED";
+            position:absolute;
+            right:10px;
+            bottom:8px;
+            font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-weight: 600;
+            font-size: 10px;
+            letter-spacing: 0.22em;
+            color: rgba(130, 20, 15, 0.85);
+            border: 1px solid rgba(130, 20, 15, 0.55);
+            padding: 2px 6px;
+            transform: rotate(-9deg);
+            background: rgba(255,255,255,0.35);
+        }
+
         .scroll-hide::-webkit-scrollbar { display: none; }
         .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -69,26 +172,26 @@
 
     <!-- CONNECT SCREEN -->
     <div id="connect-screen" class="max-w-md w-full glass-card p-10 rounded-2xl text-center space-y-6 shadow-2xl animate-fade-in">
-        <div class="text-6xl mb-4">🌌</div>
-        <h1 class="text-3xl font-extrabold tracking-tight">Cadavre Builder</h1>
+        <div class="text-6xl mb-4">✂️</div>
+        <h1 class="text-3xl font-extrabold tracking-tight typewriter">Cadavre Exquis Atelier</h1>
         <p class="text-muted-foreground leading-relaxed">
-            Визуальный конструктор персонажей.<br>Выбери детали → Сгенерируй шедевр.
+            Коллажный сюрреализм 30-х: три сгиба — одна фигура.<br><span class="mono text-[11px]">Pick fragments → fold → reveal.</span>
         </p>
-        <button id="connect-btn" class="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 transition-all">
-            <i data-lucide="link" class="w-5 h-5"></i> Connect Pollinations Account
+        <button id="connect-btn" class="w-full bg-primary text-primary-foreground hover:opacity-90 py-3 px-6 rounded-lg font-bold flex items-center justify-center gap-2 transition-all">
+            <i data-lucide="door-open" class="w-5 h-5"></i> Войти в ателье
         </button>
-        <div class="text-xs text-muted-foreground opacity-70 italic">Takes 10 seconds. You'll return here automatically.</div>
+        <div class="text-xs text-muted-foreground opacity-70 italic">~10 секунд. Вернёшься сюда автоматически.</div>
     </div>
 
     <!-- MAIN APP SCREEN -->
     <div id="app" class="hidden w-full max-w-6xl flex flex-col gap-6 animate-fade-in">
         <header class="flex justify-between items-center py-2 px-1">
             <div class="flex items-center gap-3">
-                <span class="text-2xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">🎨 BUILDER</span>
+                <span class="text-xl font-black typewriter tracking-tight">✂️ ATELIER</span>
             </div>
             <div class="flex items-center gap-4">
                 <div id="badge" class="bg-secondary text-xs font-semibold py-1.5 px-3 rounded-full border border-border">🔌 — Pollen</div>
-                <button id="disconnect-btn" class="text-xs text-muted-foreground hover:text-red-400 transition-colors uppercase tracking-widest font-bold">Disconnect</button>
+                <button id="disconnect-btn" class="text-xs text-muted-foreground hover:text-[hsl(10_55%_38%)] transition-colors uppercase tracking-widest font-bold mono">Seal off</button>
             </div>
         </header>
 
