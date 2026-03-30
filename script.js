@@ -1,7 +1,6 @@
 /**
  * Cadavre Builder - Core Logic
  * Author: Antigravity / baran-sd
- * A specialized visual constructor for tri-style character metamorphosis.
  */
 
 // --- BUILDER DATA ---
@@ -73,55 +72,62 @@ function init() {
 }
 
 function showConnect() {
-  document.getElementById('connect-screen').classList.remove('hidden');
-  document.getElementById('app').classList.add('hidden');
+  const connectScreen = document.getElementById('connect-screen');
+  const appScreen = document.getElementById('app');
+  if(connectScreen) connectScreen.classList.remove('hidden');
+  if(appScreen) appScreen.classList.add('hidden');
 }
 
 function showApp(key) {
-  document.getElementById('connect-screen').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
+  const connectScreen = document.getElementById('connect-screen');
+  const appScreen = document.getElementById('app');
+  if(connectScreen) connectScreen.classList.add('hidden');
+  if(appScreen) appScreen.classList.remove('hidden');
   fetchBalance(key);
 }
 
 // --- BUILDER UI ---
 function initBuilderGrids() {
-  // Poses
   const poseGrid = document.getElementById('poseGrid');
-  POSES.forEach((p, i) => {
-    const btn = createGridBtn(p.emoji, p.name);
-    btn.onclick = () => {
-      document.querySelectorAll('#poseGrid .gender-btn').forEach(b => b.classList.remove('btn-selected'));
-      builderSelections.pose = i;
-      btn.classList.add('btn-selected');
-    };
-    poseGrid.appendChild(btn);
-  });
-
-  // Styles
-  ['top', 'middle', 'bottom'].forEach(zone => {
-    const grid = document.getElementById(`${zone}Style`);
-    STYLES.forEach((s, i) => {
-      const btn = createGridBtn(s.emoji, s.name);
+  if (poseGrid) {
+    POSES.forEach((p, i) => {
+      const btn = createGridBtn(p.emoji, p.name);
       btn.onclick = () => {
-        grid.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('btn-selected'));
-        builderSelections[`${zone}Style`] = i;
+        document.querySelectorAll('#poseGrid .gender-btn').forEach(b => b.classList.remove('btn-selected'));
+        builderSelections.pose = i;
         btn.classList.add('btn-selected');
       };
-      grid.appendChild(btn);
+      poseGrid.appendChild(btn);
     });
+  }
+
+  ['top', 'middle', 'bottom'].forEach(zone => {
+    const grid = document.getElementById(`${zone}Style`);
+    if (grid) {
+      STYLES.forEach((s, i) => {
+        const btn = createGridBtn(s.emoji, s.name);
+        btn.onclick = () => {
+          grid.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('btn-selected'));
+          builderSelections[`${zone}Style`] = i;
+          btn.classList.add('btn-selected');
+        };
+        grid.appendChild(btn);
+      });
+    }
   });
 
-  // Atmosphere
   const atmGrid = document.getElementById('atmGrid');
-  ATMOSPHERES.forEach((a, i) => {
-    const btn = createGridBtn(a.emoji, a.name);
-    btn.onclick = () => {
-      document.querySelectorAll('#atmGrid .gender-btn').forEach(b => b.classList.remove('btn-selected'));
-      builderSelections.atmosphere = i;
-      btn.classList.add('btn-selected');
-    };
-    atmGrid.appendChild(btn);
-  });
+  if (atmGrid) {
+    ATMOSPHERES.forEach((a, i) => {
+      const btn = createGridBtn(a.emoji, a.name);
+      btn.onclick = () => {
+        document.querySelectorAll('#atmGrid .gender-btn').forEach(b => b.classList.remove('btn-selected'));
+        builderSelections.atmosphere = i;
+        btn.classList.add('btn-selected');
+      };
+      atmGrid.appendChild(btn);
+    });
+  }
 }
 
 function createGridBtn(emoji, name) {
@@ -131,13 +137,13 @@ function createGridBtn(emoji, name) {
   return btn;
 }
 
-function selectGender(gender) {
+// Reikalinga funkcija HTML mygtukams
+window.selectGender = function(gender) {
   builderSelections.gender = gender;
   document.getElementById('genderMale').classList.toggle('btn-selected', gender === 'male');
   document.getElementById('genderFemale').classList.toggle('btn-selected', gender === 'female');
-}
+};
 
-// --- CORE UTILS ---
 async function fetchBalance(key) {
   try {
     const r = await fetch('https://gen.pollinations.ai/pollen', { headers: { Authorization: `Bearer ${key}` } });
@@ -168,34 +174,30 @@ function setupEventListeners() {
   };
 }
 
-// --- GENERATION LOGIC ---
 async function runAgent(isChain = false) {
   const key = localStorage.getItem('pollen_key');
-  
   if (!key) {
     alert("🌌 Please connect your Pollinations account first!");
     showConnect();
     return;
   }
 
-  // VALIDATION
   if (!builderSelections.gender || builderSelections.pose === null) {
     alert('⚠️ Select character gender and pose first!');
     return;
   }
 
   const imgModel = document.getElementById('img-model').value;
-  const [w, h] = document.getElementById('aspect').value.split(':');
+  const aspectValue = document.getElementById('aspect').value;
+  const [w, h] = aspectValue.split(':');
   const seedVal = document.getElementById('seed-input').value;
   const seed = seedVal ? parseInt(seedVal) : Math.floor(Math.random() * 999999);
 
-  // START UI
   const btn = document.getElementById('gen-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="inline-block animate-spin mr-2">⏳</span> Building...';
   setUILoading();
 
-  // CONSTRUCT PROMPT
   const g = builderSelections.gender === 'male' ? 'handsome man' : 'beautiful woman';
   const p = POSES[builderSelections.pose].desc;
   const tS = builderSelections.topStyle !== null ? STYLES[builderSelections.topStyle] : null;
@@ -209,21 +211,16 @@ async function runAgent(isChain = false) {
   if (bS) finalPrompt += `BOTTOM: ${bS.name} (${bS.botDesc}). `;
   finalPrompt += `Seamless transition gradients, identical facial features, same character throughout. Atmosphere: ${atm}. Photorealistic 8k vertical.`;
   
-  if (isChain) {
+  if (isChain && lastAgentPrompt) {
     finalPrompt = `Continuous metamorphosis: ${lastAgentPrompt}. Now blending into: ${finalPrompt}. Seamless integration.`;
   }
 
-  // Show prompt log
   document.getElementById('prompt-log').classList.remove('hidden');
   document.getElementById('log-body').textContent = finalPrompt;
 
-  console.log("Final Prompt for Gen:", finalPrompt);
   setStatus('🎨 Генерирую картинку...');
   
-  let imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true&safe=true`;
-  if (key) {
-    imgUrl += `&pollen_key=${key}&key=${key}`;
-  }
+  let imgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true&safe=true&pollen_key=${key}`;
   
   const imgElement = document.getElementById('result-img');
 
@@ -236,19 +233,17 @@ async function runAgent(isChain = false) {
     
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> GENERATE CHARACTER';
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
     fetchBalance(key);
   };
 
   imgElement.onerror = () => {
-    console.error("Image failed to load:", imgUrl);
     setStatus("❌ Image load failed. Check your Pollen balance.");
     document.getElementById('loading-state').classList.add('hidden');
     document.getElementById('placeholder').classList.remove('hidden');
-    
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> GENERATE CHARACTER';
-    lucide.createIcons();
+    if (window.lucide) lucide.createIcons();
   };
 
   imgElement.src = imgUrl;
@@ -262,6 +257,10 @@ function setUILoading() {
   setStatus('🤖 Initializing Character...');
 }
 
-function setStatus(msg) { document.getElementById('status').textContent = msg; }
+function setStatus(msg) { 
+  const statusEl = document.getElementById('status');
+  if(statusEl) statusEl.textContent = msg; 
+}
 
+// Paleidžiame inicializaciją
 init();
