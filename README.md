@@ -19,13 +19,6 @@ Built with 💜 for the [Pollinations.ai](https://pollinations.ai) ecosystem.
   - `/p/` for Image generation (Flux, Z-Image).
   - `/account/balance` for real-time Pollen tracking.
 
-## 💰 Maximizing Tiers (Flower/Nectar)
-This app is designed to qualify for the **Flower Tier** (0.4 P/hr refill). 
-To level up:
-1. Fork this repo and host it on **GitHub Pages**.
-2. Submit your version to the [Pollinations Apps Showcase](https://hello.pollinations.ai/apps).
-3. The clean code structure and unique "Chain" feature are designed to impress the reviewers.
-
 ## 🧑‍💻 Contributing
 This project is an open-source collaboration. Feel free to open issues or PRs to improve the agent's logic or UI!
 
