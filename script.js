@@ -4,6 +4,41 @@
  * A specialized visual constructor for tri-style character metamorphosis.
  */
 
+// #region agent log
+function __dbg(hypothesisId, location, message, data) {
+  try {
+    const payload = { runId: 'debug1', hypothesisId, location, message, data, timestamp: Date.now() };
+
+    // Local fallback so we can still extract evidence even if localhost logging is blocked.
+    try {
+      const arr = JSON.parse(localStorage.getItem('__dbg') || '[]');
+      arr.push(payload);
+      localStorage.setItem('__dbg', JSON.stringify(arr.slice(-200)));
+    } catch (_) {}
+
+    // Server logging (best-effort). Do not include secrets in `data`.
+    fetch('http://127.0.0.1:7242/ingest/5f537c7f-a1f2-48dd-8418-8be5c4c23762', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+  } catch (_) {}
+}
+
+function __maskPollinationsUrl(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    // Redact known auth params.
+    for (const k of ['pollen_key', 'key', 'api_key']) {
+      if (u.searchParams.has(k)) u.searchParams.set(k, '[redacted]');
+    }
+    return u.toString();
+  } catch {
+    return urlStr;
+  }
+}
+// #endregion
+
 // --- BUILDER DATA ---
 const POSES = [
   { emoji: '🧍', name: 'Стоя', desc: 'stands confidently, facing forward' },
@@ -58,7 +93,19 @@ let builderSelections = {
 // --- INITIALIZATION ---
 function init() {
   const hash = new URLSearchParams(window.location.hash.slice(1));
+  const search = new URLSearchParams(window.location.search);
   const k = hash.get('api_key');
+  const kSearchApiKey = search.get('api_key');
+  const kSearchKey = search.get('key');
+  __dbg('H0', 'script.js:init', 'security context', {
+    protocol: location.protocol,
+    origin: location.origin,
+    isSecureContext: window.isSecureContext,
+    hasHashApiKey: Boolean(k),
+    hasSearchApiKey: Boolean(kSearchApiKey),
+    hasSearchKeyParam: Boolean(kSearchKey),
+    hasStoredKey: Boolean(localStorage.getItem('pollen_key'))
+  });
   
   if (k) {
     localStorage.setItem('pollen_key', k);
@@ -80,7 +127,7 @@ function showConnect() {
 function showApp(key) {
   document.getElementById('connect-screen').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  fetchBalance(key);
+  // Balance endpoint is not available; leave badge as default.
 }
 
 // --- BUILDER UI ---
@@ -140,12 +187,22 @@ function selectGender(gender) {
 // --- CORE UTILS ---
 async function fetchBalance(key) {
   try {
+    __dbg('H4', 'script.js:fetchBalance', 'requesting balance', {
+      endpoint: 'https://gen.pollinations.ai/pollen',
+      hasKey: Boolean(key),
+      keyPrefix: key ? String(key).slice(0, 3) : null
+    });
     const r = await fetch('https://gen.pollinations.ai/pollen', { headers: { Authorization: `Bearer ${key}` } });
+    __dbg('H4', 'script.js:fetchBalance', 'balance response', { ok: r.ok, status: r.status });
     if (!r.ok) throw new Error();
     const d = await r.json();
     const balance = d.balance ?? d.pollen ?? d.total_pollen ?? '—';
     document.getElementById('badge').textContent = `🔌 ${balance} Pollen`;
   } catch (e) {
+    __dbg('H4', 'script.js:fetchBalance', 'balance failed', {
+      errorName: e?.name || null,
+      errorMessage: e?.message || String(e)
+    });
     document.getElementById('badge').textContent = '🔌 — Pollen';
   }
 }
@@ -171,6 +228,15 @@ function setupEventListeners() {
 // --- GENERATION LOGIC ---
 async function runAgent(isChain = false) {
   const key = localStorage.getItem('pollen_key');
+  __dbg('H5', 'script.js:runAgent', 'runAgent start', {
+    isChain,
+    hasKey: Boolean(key),
+    keyPrefix: key ? String(key).slice(0, 3) : null,
+    selection: {
+      gender: builderSelections.gender,
+      poseIndex: builderSelections.pose
+    }
+  });
   
   if (!key) {
     alert("🌌 Please connect your Pollinations account first!");
@@ -220,17 +286,32 @@ async function runAgent(isChain = false) {
   console.log("Final Prompt for Gen:", finalPrompt);
   setStatus('🎨 Генерирую картинку...');
   
-  let apiUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?model=${imgModel}&width=${w}&height=${h}&seed=${seed}&nologo=true&safe=true`;
-  if (key) {
-    apiUrl += `&pollen_key=${key}`;
-  }
+  // Pollinations API docs:
+  // - Image endpoint: GET /image/{prompt} on https://gen.pollinations.ai
+  // - Auth: Authorization header or query param `?key=...`
+  let apiUrl =
+    `https://gen.pollinations.ai/image/${encodeURIComponent(finalPrompt)}` +
+    `?model=${encodeURIComponent(imgModel)}` +
+    `&width=${encodeURIComponent(w)}` +
+    `&height=${encodeURIComponent(h)}` +
+    `&seed=${encodeURIComponent(seed)}` +
+    `&nologo=true&safe=true`;
+  if (key) apiUrl += `&key=${encodeURIComponent(key)}`;
+  __dbg('H1', 'script.js:runAgent', 'constructed image url', {
+    maskedUrl: __maskPollinationsUrl(apiUrl),
+    hasPollenKeyParam: apiUrl.includes('pollen_key='),
+    hasKeyParam: apiUrl.includes('key=')
+  });
   
-  console.log("Requesting URL:", apiUrl);
+  console.log("Requesting URL:", __maskPollinationsUrl(apiUrl));
   
   const imgElement = document.getElementById('result-img');
 
   imgElement.onload = () => {
     console.log("Image loaded successfully!");
+    __dbg('H2', 'script.js:img.onload', 'image loaded', {
+      src: __maskPollinationsUrl(imgElement.currentSrc || imgElement.src || '')
+    });
     document.getElementById('loading-state').classList.add('hidden');
     imgElement.classList.remove('hidden');
     document.getElementById('img-overlay').classList.remove('hidden');
@@ -240,12 +321,15 @@ async function runAgent(isChain = false) {
     btn.disabled = false;
     btn.innerHTML = '<i data-lucide="sparkles" class="w-6 h-6"></i> GENERATE CHARACTER';
     lucide.createIcons();
-    fetchBalance(key);
   };
 
   imgElement.onerror = (e) => {
-    console.error("❌ Image failed to load from URL:", apiUrl);
+    console.error("❌ Image failed to load from URL:", __maskPollinationsUrl(apiUrl));
     console.error("Error event:", e);
+    __dbg('H2', 'script.js:img.onerror', 'image failed', {
+      src: __maskPollinationsUrl(imgElement.currentSrc || imgElement.src || apiUrl),
+      eventType: e?.type || null
+    });
     setStatus("❌ Generation failed. Check console for details.");
     document.getElementById('loading-state').classList.add('hidden');
     document.getElementById('placeholder').classList.remove('hidden');
