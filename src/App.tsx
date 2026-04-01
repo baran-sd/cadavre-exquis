@@ -1,10 +1,18 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
 import { generateFullCharacter, editCharacterPart, Zone } from "./lib/gemini";
 
 interface PartState {
   prompt: string;
+}
+
+interface HistoryItem {
+  id: string;
+  image: string;
+  parts: Record<Zone, PartState>;
+  atmosphere: typeof ATMOSPHERES[0];
+  timestamp: number;
 }
 
 const ATMOSPHERES = [
@@ -25,8 +33,28 @@ export default function App() {
   const [loadingZone, setLoadingZone] = useState<Zone | null>(null);
   const [atmosphere, setAtmosphere] = useState(ATMOSPHERES[0]);
   const [showInfo, setShowInfo] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeZone, setActiveZone] = useState<Zone>("head");
   const [apiKey, setApiKey] = useState("");
+
+  const addToHistory = (image: string, currentParts: Record<Zone, PartState>, currentAtmo: typeof ATMOSPHERES[0]) => {
+    const newItem: HistoryItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      image,
+      parts: JSON.parse(JSON.stringify(currentParts)),
+      atmosphere: currentAtmo,
+      timestamp: Date.now(),
+    };
+    setHistory(prev => [newItem, ...prev].slice(0, 10));
+  };
+
+  const restoreHistory = (item: HistoryItem) => {
+    setFullImage(item.image);
+    setParts(item.parts);
+    setAtmosphere(item.atmosphere);
+    setShowHistory(false);
+  };
 
   const generateAll = async () => {
     setLoading(true);
@@ -40,6 +68,7 @@ export default function App() {
       });
       if (image) {
         setFullImage(image);
+        addToHistory(image, parts, atmosphere);
       }
     } catch (error) {
       console.error("Failed to generate full character:", error);
@@ -64,7 +93,10 @@ export default function App() {
         zoneToEdit: zone,
         customApiKey: apiKey,
       });
-      if (image) setFullImage(image);
+      if (image) {
+        setFullImage(image);
+        addToHistory(image, parts, atmosphere);
+      }
     } catch (error) {
       console.error(`Failed to edit ${zone}:`, error);
     } finally {
@@ -116,12 +148,22 @@ export default function App() {
             Consistent AI Surrealism
           </p>
         </div>
-        <button 
-          onClick={() => setShowInfo(!showInfo)}
-          className="p-3 glass rounded-full hover:bg-white/10 transition-colors"
-        >
-          <Info className="w-5 h-5" />
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setShowHistory(!showHistory)}
+            className={`p-3 glass rounded-full hover:bg-white/10 transition-colors ${showHistory ? "text-mystic-gold bg-white/10" : ""}`}
+            title="History"
+          >
+            <Clock className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={() => setShowInfo(!showInfo)}
+            className="p-3 glass rounded-full hover:bg-white/10 transition-colors"
+            title="Information"
+          >
+            <Info className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start z-10 flex-1">
@@ -339,6 +381,82 @@ export default function App() {
         </div>
       </main>
 
+      {/* History Drawer */}
+      <AnimatePresence>
+        {showHistory && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowHistory(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-sm z-50 glass border-l border-white/10 p-6 shadow-2xl flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-mystic-gold" />
+                  <h2 className="text-2xl font-serif italic text-mystic-gold">History</h2>
+                </div>
+                <button 
+                  onClick={() => setShowHistory(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 space-y-6 custom-scrollbar">
+                {history.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center opacity-20 text-center p-8">
+                    <Ghost className="w-12 h-12 mb-4" />
+                    <p className="text-sm uppercase tracking-widest leading-relaxed">The archives are empty. Manifest something new.</p>
+                  </div>
+                ) : (
+                  history.map((item) => (
+                    <div 
+                      key={item.id}
+                      onClick={() => restoreHistory(item)}
+                      className="group cursor-pointer space-y-3"
+                    >
+                      <div className="relative aspect-[9/16] rounded-2xl overflow-hidden border border-white/5 ring-mystic-gold/0 group-hover:ring-2 transition-all shadow-lg bg-zinc-900">
+                        <img 
+                          src={item.image} 
+                          alt="History iteration" 
+                          className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-mystic-gold font-bold">Restore Iteration</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-start px-1">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest opacity-40 mb-1">
+                            {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                          <p className="text-xs font-serif italic truncate max-w-[200px]">
+                            {item.parts.head.prompt || "Untitled Manifestation"}
+                          </p>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 group-hover:border-mystic-gold/30 transition-colors">
+                          <item.atmosphere.icon className="w-3 h-3 opacity-40 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Info Modal */}
       <AnimatePresence>
         {showInfo && (
@@ -367,6 +485,7 @@ export default function App() {
                   <li>1. **Conjure**: Enter prompts for all zones and generate a full, unified character.</li>
                   <li>2. **Refine**: Use the refresh icon on a specific zone to modify only that part.</li>
                   <li>3. **Atmosphere**: Change the mood to shift the entire stylistic direction.</li>
+                  <li>4. **Archive**: Access your previous iterations via the clock icon in the header.</li>
                 </ul>
               </div>
               <button
