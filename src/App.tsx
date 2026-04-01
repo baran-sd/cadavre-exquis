@@ -40,6 +40,7 @@ export default function App() {
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("pollinations_api_key"));
   const [welcomeApiKey, setWelcomeApiKey] = useState("");
   const [rememberKey, setRememberKey] = useState(true);
+  const [canvasKey, setCanvasKey] = useState(0);
 
   useEffect(() => {
     if (apiKey && rememberKey) {
@@ -79,6 +80,7 @@ export default function App() {
       });
       if (image) {
         setFullImage(image);
+        setCanvasKey(prev => prev + 1);
         addToHistory(image, parts, atmosphere);
       }
     } catch (error) {
@@ -334,7 +336,7 @@ export default function App() {
                   animate={{ opacity: 1 }}
                   exit={{ y: "100%", opacity: 0 }}
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-20"
+                  className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-30"
                 >
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-16 h-16 border-4 border-mystic-gold border-t-transparent rounded-full animate-spin" />
@@ -343,7 +345,7 @@ export default function App() {
                 </motion.div>
               ) : fullImage ? (
                 <motion.div
-                  key={fullImage}
+                  key={canvasKey}
                   initial={{ y: "-100%", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: "100%", opacity: 0 }}
@@ -355,56 +357,49 @@ export default function App() {
                   }}
                   className="relative w-full h-full flex flex-col"
                 >
-                  {/* Head Zone Display */}
-                  <div className="h-[30%] relative overflow-hidden bg-zinc-900/40">
-                    <AnimatePresence>
-                      {loadingZone !== "head" && (
-                        <motion.img
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          src={fullImage}
-                          alt="Head Section"
-                          className="absolute top-0 left-0 w-full h-[333.33%] object-cover grayscale hover:grayscale-0 transition-all duration-1000 origin-top"
-                          referrerPolicy="no-referrer"
-                        />
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Torso Zone Display */}
-                  <div className="h-[35%] relative overflow-hidden bg-zinc-900/40 border-y border-white/5">
-                    <AnimatePresence>
-                      {loadingZone !== "torso" && (
-                        <motion.img
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          src={fullImage}
-                          alt="Torso Section"
-                          className="absolute top-[-85%] left-0 w-full h-[285.7%] object-cover grayscale hover:grayscale-0 transition-all duration-1000"
-                          referrerPolicy="no-referrer"
-                        />
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Legs Zone Display */}
-                  <div className="h-[35%] relative overflow-hidden bg-zinc-900/40">
-                    <AnimatePresence>
-                      {loadingZone !== "legs" && (
-                        <motion.img
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          src={fullImage}
-                          alt="Legs Section"
-                          className="absolute bottom-0 left-0 w-full h-[285.7%] object-cover grayscale hover:grayscale-0 transition-all duration-1000 origin-bottom"
-                          referrerPolicy="no-referrer"
-                        />
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  {/* Actual character display */}
+                  {!loadingZone ? (
+                    /* Unified static image for perfect alignment */
+                    <motion.img
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      src={fullImage}
+                      alt="Surrealist Character"
+                      className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    /* Segmented view for zone-specific loading animations */
+                    <div className="w-full h-full flex flex-col">
+                      <div className="h-[30%] relative overflow-hidden">
+                        {loadingZone !== "head" && (
+                          <img
+                            src={fullImage}
+                            className="absolute top-0 left-0 w-full h-[333.33%] object-cover grayscale"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                      </div>
+                      <div className="h-[35%] relative overflow-hidden">
+                        {loadingZone !== "torso" && (
+                          <img
+                            src={fullImage}
+                            className="absolute top-[-85.714%] left-0 w-full h-[285.714%] object-cover grayscale"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                      </div>
+                      <div className="h-[35%] relative overflow-hidden">
+                        {loadingZone !== "legs" && (
+                          <img
+                            src={fullImage}
+                            className="absolute bottom-0 left-0 w-full h-[285.714%] object-cover grayscale"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Zone Refinement Indicators */}
                   {loadingZone && (
@@ -446,6 +441,9 @@ export default function App() {
                     className={`flex-1 relative group/zone transition-colors ${activeZone === zone ? "bg-white/5" : "hover:bg-white/5"}`}
                     onClick={() => setActiveZone(zone)}
                   >
+                    {/* Zone Border Highlight */}
+                    <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${activeZone === zone ? "border-mystic-gold/20 bg-mystic-gold/5" : "group-hover/zone:border-mystic-gold/10"}`} />
+                    
                     {/* Left/Right Buttons */}
                     <button
                       onClick={(e) => { e.stopPropagation(); editPart(zone); }}
