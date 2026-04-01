@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@theme {
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Inter", sans-serif;
+  
+  --color-mystic-black: #050505;
+  --color-mystic-gold: #D4AF37;
+  --color-mystic-red: #8B0000;
+}
+
+:root {
+  background-color: var(--color-mystic-black);
+  color: white;
+}
+
+body {
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+.serif {
+  font-family: var(--font-serif);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.atmosphere {
+  background: 
+    radial-gradient(circle at 50% 30%, #1a0f0a 0%, transparent 60%),
+    radial-gradient(circle at 10% 80%, #0a1a10 0%, transparent 50%);
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.05;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
