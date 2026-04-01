@@ -37,7 +37,7 @@ export default function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeZone, setActiveZone] = useState<Zone>("head");
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("pollinations_api_key") || "");
-  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("pollinations_api_key") && !sessionStorage.getItem("welcome_dismissed"));
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("pollinations_api_key"));
   const [welcomeApiKey, setWelcomeApiKey] = useState("");
   const [rememberKey, setRememberKey] = useState(true);
 
@@ -172,6 +172,13 @@ export default function App() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button 
+            onClick={() => setShowWelcome(true)}
+            className={`p-3 glass rounded-full hover:bg-white/10 transition-colors ${apiKey ? "text-emerald-400" : "text-mystic-gold hover:text-white"}`}
+            title="Connection Settings"
+          >
+            <Wifi className="w-5 h-5" />
+          </button>
           <button 
             onClick={() => setShowHistory(!showHistory)}
             className={`p-3 glass rounded-full hover:bg-white/10 transition-colors ${showHistory ? "text-mystic-gold bg-white/10" : ""}`}
