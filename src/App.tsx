@@ -39,12 +39,15 @@ export default function App() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("pollinations_api_key") || "");
   const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("pollinations_api_key") && !sessionStorage.getItem("welcome_dismissed"));
   const [welcomeApiKey, setWelcomeApiKey] = useState("");
+  const [rememberKey, setRememberKey] = useState(true);
 
   useEffect(() => {
-    if (apiKey) {
+    if (apiKey && rememberKey) {
       localStorage.setItem("pollinations_api_key", apiKey);
+    } else if (!rememberKey) {
+      localStorage.removeItem("pollinations_api_key");
     }
-  }, [apiKey]);
+  }, [apiKey, rememberKey]);
 
   const addToHistory = (image: string, currentParts: Record<Zone, PartState>, currentAtmo: typeof ATMOSPHERES[0]) => {
     const newItem: HistoryItem = {
@@ -142,8 +145,12 @@ export default function App() {
   };
 
   const handleConnect = () => {
-    if (welcomeApiKey.trim()) {
-      setApiKey(welcomeApiKey.trim());
+    const trimmedKey = welcomeApiKey.trim();
+    if (trimmedKey) {
+      setApiKey(trimmedKey);
+      if (rememberKey) {
+        localStorage.setItem("pollinations_api_key", trimmedKey);
+      }
     }
     setShowWelcome(false);
     sessionStorage.setItem("welcome_dismissed", "true");
@@ -582,15 +589,24 @@ export default function App() {
                 </div>
 
                 {/* API Key Input */}
-                <div className="space-y-3 mb-8">
-                  <label className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-50">
-                    <Key className="w-3 h-3" />
-                    API Ключ <span className="normal-case opacity-60">(опционально)</span>
-                  </label>
+                <div className="space-y-4 mb-8">
+                  <div className="flex justify-between items-center">
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-50">
+                      <Key className="w-3 h-3" />
+                      API Ключ <span className="normal-case opacity-60">(рекомендован pk_)</span>
+                    </label>
+                    <div className="group relative">
+                      <Info className="w-3.5 h-3.5 opacity-30 hover:opacity-100 cursor-help transition-opacity" />
+                      <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-zinc-900 border border-white/10 rounded-xl text-[10px] leading-relaxed opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-2xl z-50">
+                        <span className="text-mystic-gold font-bold">pk_</span> — для браузеров (безопасно).<br/>
+                        <span className="text-mystic-gold font-bold">sk_</span> — секретный ключ.
+                      </div>
+                    </div>
+                  </div>
                   <div className="relative">
                     <input
                       type="password"
-                      placeholder="Введите sk_ или pk_ ключ для Pro моделей..."
+                      placeholder="Введите pk_ или sk_ ключ..."
                       value={welcomeApiKey}
                       onChange={(e) => setWelcomeApiKey(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleConnect()}
@@ -605,10 +621,23 @@ export default function App() {
                       </button>
                     )}
                   </div>
-                  <p className="text-[10px] opacity-30 leading-relaxed">
-                    Получить ключ можно на{" "}
-                    <a href="https://auth.pollinations.ai" target="_blank" rel="noopener noreferrer" className="text-mystic-gold/60 hover:text-mystic-gold underline">auth.pollinations.ai</a>
-                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <input 
+                         type="checkbox" 
+                         id="remember" 
+                         checked={rememberKey}
+                         onChange={(e) => setRememberKey(e.target.checked)}
+                         className="w-4 h-4 rounded border-white/10 bg-white/5 accent-mystic-gold"
+                       />
+                       <label htmlFor="remember" className="text-[10px] opacity-40 cursor-pointer hover:opacity-60 transition-opacity uppercase tracking-widest">Запомнить меня</label>
+                    </div>
+                    <p className="text-[10px] opacity-30">
+                      Личный кабинет:{" "}
+                      <a href="https://enter.pollinations.ai" target="_blank" rel="noopener noreferrer" className="text-mystic-gold/60 hover:text-mystic-gold underline">enter.pollinations.ai</a>
+                    </p>
+                  </div>
                 </div>
 
                 {/* Actions */}
