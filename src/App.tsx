@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateFullCharacter, editCharacterPart, Zone } from "./lib/gemini";
 
