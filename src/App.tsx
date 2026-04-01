@@ -1,7 +1,43 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, Component, ErrorInfo, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { generateFullCharacter, editCharacterPart, Zone } from "./lib/gemini";
+
+class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
+  state: { hasError: boolean, error: Error | null } = { hasError: false, error: null };
+  props: { children: ReactNode } = { children: null as any };
+  
+  constructor(props: {children: ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black text-red-500 flex flex-col items-center justify-center p-8 text-center">
+          <AlertCircle className="w-16 h-16 mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+          <pre className="glass p-4 rounded-xl text-xs overflow-auto max-w-full text-white/70">
+            {this.state.error?.toString()}
+          </pre>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-all"
+          >
+            Reload Website
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface PartState {
   prompt: string;
@@ -14,7 +50,7 @@ const ATMOSPHERES = [
   { id: "ethereal", label: "Ethereal", icon: Sparkles, color: "from-teal-900/40 to-indigo-900/40" },
 ];
 
-export default function App() {
+function App() {
   const [parts, setParts] = useState<Record<Zone, PartState>>({
     head: { prompt: "" },
     torso: { prompt: "" },
@@ -376,5 +412,13 @@ export default function App() {
         Manifested with Gemini AI &bull; 1925 - 2026
       </footer>
     </div>
+  );
+}
+
+export default function Root() {
+  return (
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   );
 }
