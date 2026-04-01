@@ -8,6 +8,7 @@ export interface GenerationParams {
   baseImage?: string;
   zoneToEdit?: Zone;
   customApiKey?: string;
+  seed?: number;
 }
 
 export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPrompt, atmosphere, customApiKey }: GenerationParams): Promise<string> {
@@ -55,7 +56,7 @@ export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPromp
   }
 }
 
-export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, atmosphere, baseImage, zoneToEdit, customApiKey }: GenerationParams): Promise<string | null> {
+export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, atmosphere, baseImage, zoneToEdit, customApiKey, seed }: GenerationParams): Promise<string | null> {
   if (!baseImage || !zoneToEdit) return null;
   
   const apiKey = customApiKey || import.meta.env.VITE_POLLEN_API_KEY || "";
@@ -86,7 +87,8 @@ export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, a
         prompt: editPrompt,
         image: baseImage,
         size: "1024x1792",
-        response_format: "b64_json"
+        response_format: "b64_json",
+        seed: seed || Math.floor(Math.random() * 999999)
       })
     });
 

@@ -106,6 +106,7 @@ export default function App() {
         baseImage: fullImage,
         zoneToEdit: zone,
         customApiKey: apiKey,
+        seed: Math.floor(Math.random() * 999999)
       });
       if (image) {
         setFullImage(image);
@@ -419,38 +420,40 @@ export default function App() {
                 )}
               </AnimatePresence>
 
-              {/* Interactive Zones Overlay */}
               {fullImage && !loading && (
                 <div className="absolute inset-0 flex flex-col z-10">
-                  {(["head", "torso", "legs"] as Zone[]).map((zone) => (
-                    <div 
-                      key={zone}
-                      className={`flex-1 relative group/zone transition-colors`}
-                      onMouseEnter={() => setHoveredZone(zone)}
-                      onClick={() => setActiveZone(zone)}
-                    >
-                      {/* Zone Border Highlight - shows on hover OR if active AND cursor is within canvas */}
-                      <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${hoveredZone === zone ? "border-mystic-gold/20 bg-mystic-gold/5" : ""}`} />
-                      
-                      {/* Left/Right Buttons */}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); editPart(zone); }}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); editPart(zone); }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
+                  <div 
+                    className="h-[30%] relative group/zone"
+                    onMouseEnter={() => setHoveredZone("head")}
+                    onClick={() => setActiveZone("head")}
+                  >
+                    <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${hoveredZone === "head" ? "border-mystic-gold/20 bg-mystic-gold/5" : ""}`} />
+                    <button onClick={(e) => { e.stopPropagation(); editPart("head"); }} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"><ChevronLeft className="w-5 h-5" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); editPart("head"); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"><ChevronRight className="w-5 h-5" /></button>
+                    <div className={`absolute left-1/2 -translate-x-1/2 top-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${hoveredZone === "head" ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>head</div>
+                  </div>
 
-                      <div className={`absolute left-1/2 -translate-x-1/2 top-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${hoveredZone === zone ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>
-                        {zone}
-                      </div>
-                    </div>
-                  ))}
+                  <div 
+                    className="h-[35%] relative group/zone border-y border-white/5"
+                    onMouseEnter={() => setHoveredZone("torso")}
+                    onClick={() => setActiveZone("torso")}
+                  >
+                    <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${hoveredZone === "torso" ? "border-mystic-gold/20 bg-mystic-gold/5" : ""}`} />
+                    <button onClick={(e) => { e.stopPropagation(); editPart("torso"); }} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"><ChevronLeft className="w-5 h-5" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); editPart("torso"); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"><ChevronRight className="w-5 h-5" /></button>
+                    <div className={`absolute left-1/2 -translate-x-1/2 top-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${hoveredZone === "torso" ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>torso</div>
+                  </div>
+
+                  <div 
+                    className="h-[35%] relative group/zone"
+                    onMouseEnter={() => setHoveredZone("legs")}
+                    onClick={() => setActiveZone("legs")}
+                  >
+                    <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${hoveredZone === "legs" ? "border-mystic-gold/20 bg-mystic-gold/5" : ""}`} />
+                    <button onClick={(e) => { e.stopPropagation(); editPart("legs"); }} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"><ChevronLeft className="w-5 h-5" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); editPart("legs"); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"><ChevronRight className="w-5 h-5" /></button>
+                    <div className={`absolute left-1/2 -translate-x-1/2 bottom-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${hoveredZone === "legs" ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>legs</div>
+                  </div>
                 </div>
               )}
 
