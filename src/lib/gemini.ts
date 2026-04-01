@@ -10,9 +10,6 @@ export interface GenerationParams {
   customApiKey?: string;
 }
 
-/**
- * Generate a full body character.
- */
 export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPrompt, atmosphere, customApiKey }: GenerationParams): Promise<string> {
   const apiKey = customApiKey || import.meta.env.VITE_POLLEN_API_KEY || "";
   
@@ -28,18 +25,7 @@ export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPromp
   The character should be centered, full-body, on a consistent dark atmospheric background. 
   Artistic medium: Oil painting or charcoal sketch.`;
 
-  const seed = Math.floor(Math.random() * 888888);
-  const fallbackUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(combinedPrompt)}?width=1024&height=1792&model=flux&nologo=true&seed=${seed}`;
-
   try {
-    console.log("🎨 Generation attempt with key:", apiKey ? (apiKey.startsWith('sk_') ? 'SECRET' : 'PUBLIC') : 'NONE');
-    
-    // If no key, use the free GET endpoint
-    if (!apiKey) {
-      return fallbackUrl;
-    }
-
-    // Try OpenAI-compatible POST for better results with key
     const response = await fetch("https://gen.pollinations.ai/v1/images/generations", {
       method: "POST",
       headers: {
@@ -51,45 +37,44 @@ export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPromp
         prompt: combinedPrompt,
         size: "1024x1792",
         response_format: "b64_json",
-        seed: seed
+        seed: Math.floor(Math.random() * 999999)
       })
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.data && data.data[0] && data.data[0].b64_json) {
-         return `data:image/png;base64,${data.data[0].b64_json}`;
-      }
+    if (!response.ok) {
+       // Fallback for better UX if key fails/forbidden
+       const seed = Math.floor(Math.random() * 999999);
+       return `https://image.pollinations.ai/prompt/${encodeURIComponent(combinedPrompt)}?width=1024&height=1792&model=flux&nologo=true&seed=${seed}`;
     }
-    
-    // If anything fails with the key, use free fallback
-    return fallbackUrl;
+
+    const data = await response.json();
+    return `data:image/png;base64,${data.data[0].b64_json}`;
   } catch (error) {
-    console.error("API error, falling back...", error);
-    return fallbackUrl;
+    console.error("Full character generation error:", error);
+    throw error;
   }
 }
 
-/**
- * Edit a part of the character.
- */
 export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, atmosphere, baseImage, zoneToEdit, customApiKey }: GenerationParams): Promise<string | null> {
   if (!baseImage || !zoneToEdit) return null;
   
   const apiKey = customApiKey || import.meta.env.VITE_POLLEN_API_KEY || "";
   const currentPrompt = zoneToEdit === 'head' ? headPrompt : zoneToEdit === 'torso' ? torsoPrompt : legsPrompt;
   
-  const editPrompt = `SURREALIST IMAGE EDITING:
-  Change the ${zoneToEdit} to: ${currentPrompt || "Surreal"}
-  Atmosphere: ${atmosphere}.
-  Maintain existing style and background.`;
+  const editPrompt = `SURREALIST IMAGE EDITING TASK:
+  You are modifying a specific zone of an existing surrealist character.
+  
+  ZONE TO MODIFY: ${zoneToEdit}
+  NEW DESCRIPTION FOR ${zoneToEdit}: ${currentPrompt || "Surreal and mystical"}
+  
+  STRICT CONSTRAINTS:
+  1. ONLY change the ${zoneToEdit} area. 
+  2. The ${(["head", "torso", "legs"] as Zone[]).filter(z => z !== zoneToEdit).join(" and ")} MUST remain exactly as they are in the original image.
+  3. The background, lighting, and overall 1920s surrealist oil painting style MUST be preserved perfectly.
+  4. Ensure a seamless transition between the new ${zoneToEdit} and the rest of the body.
+  5. The atmosphere is ${atmosphere}.`;
 
   try {
-    if (!apiKey) {
-      // Prompt based variation for free API
-      return `https://image.pollinations.ai/prompt/${encodeURIComponent(editPrompt)}?width=1024&height=1792&model=flux&seed=${Math.floor(Math.random()*9999)}`;
-    }
-
     const response = await fetch("https://gen.pollinations.ai/v1/images/edits", {
       method: "POST",
       headers: {
@@ -97,7 +82,7 @@ export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, a
         "Authorization": `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: "flux",
+        model: "klein",
         prompt: editPrompt,
         image: baseImage,
         size: "1024x1792",
@@ -105,14 +90,15 @@ export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, a
       })
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.data && data.data[0] && data.data[0].b64_json) {
-        return `data:image/png;base64,${data.data[0].b64_json}`;
-      }
+    if (!response.ok) {
+      const editFallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(editPrompt)}?width=1024&height=1792&model=flux&seed=${Math.floor(Math.random()*9999)}`;
+      return editFallback;
     }
-    return `https://image.pollinations.ai/prompt/${encodeURIComponent(editPrompt)}?width=1024&height=1792&seed=${Date.now()}`;
+
+    const data = await response.json();
+    return `data:image/png;base64,${data.data[0].b64_json}`;
   } catch (error) {
-    return null;
+    console.error("Character edit error:", error);
+    throw error;
   }
 }
