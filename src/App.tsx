@@ -202,36 +202,42 @@ export default function App() {
               <h2 className="text-sm uppercase tracking-widest font-semibold opacity-70">Segments</h2>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               {(["head", "torso", "legs"] as Zone[]).map((zone) => (
-                <div key={zone} className={`p-4 rounded-2xl border transition-all ${activeZone === zone ? "bg-white/10 border-white/20" : "bg-transparent border-transparent"}`}>
-                  <div className="flex justify-between items-center mb-3">
-                    <button 
-                      onClick={() => setActiveZone(zone)}
-                      className="text-lg font-serif capitalize italic hover:text-mystic-gold transition-colors"
-                    >
-                      {zone}
-                    </button>
-                    <button
-                      onClick={() => editPart(zone)}
-                      disabled={loading || !!loadingZone}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-widest transition-all ${
-                        fullImage 
-                          ? "bg-mystic-gold/20 text-mystic-gold hover:bg-mystic-gold/30" 
-                          : "bg-white/5 text-white/40 hover:bg-white/10"
-                      } disabled:opacity-30`}
-                    >
-                      <RefreshCw className={`w-3 h-3 ${loadingZone === zone ? "animate-spin" : ""}`} />
-                      {fullImage ? "Refine" : "Start Here"}
-                    </button>
+                <div 
+                  key={zone} 
+                  className={`p-3 rounded-2xl border transition-all ${activeZone === zone ? "bg-white/10 border-white/20 shadow-lg" : "bg-transparent border-transparent"}`}
+                  onClick={() => setActiveZone(zone)}
+                >
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-xs font-serif capitalize italic opacity-60 tracking-wider ">{zone}</span>
+                        {loadingZone === zone && <RefreshCw className="w-3 h-3 animate-spin text-mystic-gold" />}
+                      </div>
+                      <div className="relative group">
+                        <input
+                          type="text"
+                          placeholder={`Describe the ${zone}...`}
+                          value={parts[zone].prompt}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setParts(prev => ({ ...prev, [zone]: { ...prev[zone], prompt: e.target.value } }))}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-3 pr-20 text-sm focus:outline-none focus:border-mystic-gold transition-colors text-white placeholder:opacity-20"
+                        />
+                        <button
+                          onClick={(e) => { e.stopPropagation(); editPart(zone); }}
+                          disabled={loading || !!loadingZone}
+                          className={`absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest font-bold transition-all ${
+                            fullImage 
+                              ? "bg-mystic-gold text-black hover:bg-yellow-500 shadow-sm" 
+                              : "bg-white/10 text-white/60 hover:bg-white/20"
+                          } disabled:opacity-30`}
+                        >
+                          {fullImage ? "Refine" : "Start"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    placeholder={`Describe the ${zone}...`}
-                    value={parts[zone].prompt}
-                    onChange={(e) => setParts(prev => ({ ...prev, [zone]: { ...prev[zone], prompt: e.target.value } }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-mystic-gold transition-colors text-white"
-                  />
                 </div>
               ))}
             </div>
@@ -239,13 +245,13 @@ export default function App() {
             <div className="flex gap-3">
               <button
                 onClick={setRandomPrompts}
-                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest font-medium"
+                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-[10px] uppercase tracking-widest font-medium opacity-60 hover:opacity-100"
               >
                 Randomize
               </button>
               <button
                 onClick={clearAll}
-                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest font-medium"
+                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-[10px] uppercase tracking-widest font-medium opacity-60 hover:opacity-100"
               >
                 Clear
               </button>
@@ -279,7 +285,7 @@ export default function App() {
           <button
             onClick={downloadComposition}
             disabled={!fullImage}
-            className="w-full py-4 glass rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 disabled:opacity-30 border-white/5"
+            className="w-full py-4 glass rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 disabled:opacity-30 border-white/5 opacity-80"
           >
             <Download className="w-5 h-5" />
             PRESERVE MASTERPIECE
@@ -498,11 +504,6 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Footer */}
-      <footer className="mt-auto py-8 text-[10px] uppercase tracking-[0.4em] opacity-30 font-sans z-10">
-        Manifested with Gemini AI &bull; 1925 - 2026
-      </footer>
     </div>
   );
 }
