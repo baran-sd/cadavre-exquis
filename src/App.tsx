@@ -26,6 +26,7 @@ export default function App() {
   const [atmosphere, setAtmosphere] = useState(ATMOSPHERES[0]);
   const [showInfo, setShowInfo] = useState(false);
   const [activeZone, setActiveZone] = useState<Zone>("head");
+  const [apiKey, setApiKey] = useState("");
 
   const generateAll = async () => {
     setLoading(true);
@@ -35,6 +36,7 @@ export default function App() {
         torsoPrompt: parts.torso.prompt,
         legsPrompt: parts.legs.prompt,
         atmosphere: atmosphere.label,
+        customApiKey: apiKey,
       });
       if (image) {
         setFullImage(image);
@@ -60,6 +62,7 @@ export default function App() {
         atmosphere: atmosphere.label,
         baseImage: fullImage,
         zoneToEdit: zone,
+        customApiKey: apiKey,
       });
       if (image) setFullImage(image);
     } catch (error) {
@@ -214,6 +217,21 @@ export default function App() {
               <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
               {fullImage ? "REGENERATE ALL" : "CONJURE CHARACTER"}
             </button>
+
+            {/* Secret Key Input */}
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <div className="flex items-center gap-2">
+                <Zap className="w-3 h-3 text-mystic-gold" />
+                <h3 className="text-[10px] uppercase tracking-widest font-semibold opacity-50">Secret Alchemy</h3>
+              </div>
+              <input
+                type="password"
+                placeholder="Enter sk_ or pk_ key for Pro models..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="w-full bg-black/40 border border-white/5 rounded-xl p-3 text-[10px] focus:outline-none focus:border-mystic-gold/50 transition-colors placeholder:opacity-30"
+              />
+            </div>
           </section>
 
           <button
