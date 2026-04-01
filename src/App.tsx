@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, Clock, X } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, Clock, X, Key, Wifi, ExternalLink } from "lucide-react";
 import { generateFullCharacter, editCharacterPart, Zone } from "./lib/gemini";
 
 interface PartState {
@@ -36,7 +36,15 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeZone, setActiveZone] = useState<Zone>("head");
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("pollinations_api_key") || "");
+  const [showWelcome, setShowWelcome] = useState(() => !localStorage.getItem("pollinations_api_key") && !sessionStorage.getItem("welcome_dismissed"));
+  const [welcomeApiKey, setWelcomeApiKey] = useState("");
+
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem("pollinations_api_key", apiKey);
+    }
+  }, [apiKey]);
 
   const addToHistory = (image: string, currentParts: Record<Zone, PartState>, currentAtmo: typeof ATMOSPHERES[0]) => {
     const newItem: HistoryItem = {
@@ -131,6 +139,14 @@ export default function App() {
     link.href = fullImage;
     link.download = 'cadavre-exquis.png';
     link.click();
+  };
+
+  const handleConnect = () => {
+    if (welcomeApiKey.trim()) {
+      setApiKey(welcomeApiKey.trim());
+    }
+    setShowWelcome(false);
+    sessionStorage.setItem("welcome_dismissed", "true");
   };
 
   return (
@@ -500,6 +516,112 @@ export default function App() {
               >
                 Return to the Dream
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Welcome / Connection Modal */}
+      <AnimatePresence>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.85, y: 30, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 180, delay: 0.1 }}
+              className="glass max-w-lg w-full rounded-[40px] overflow-hidden shadow-[0_0_120px_rgba(212,175,55,0.15)] border border-white/10 relative"
+            >
+              {/* Decorative glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-mystic-gold/20 blur-[60px] rounded-full -mt-10 pointer-events-none" />
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-800/20 blur-[40px] rounded-full pointer-events-none" />
+
+              <div className="p-8 md:p-10 relative">
+                {/* Header */}
+                <div className="flex items-start gap-4 mb-8">
+                  <div className="w-14 h-14 rounded-2xl bg-mystic-gold/10 border border-mystic-gold/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(212,175,55,0.15)]">
+                    <Wifi className="w-6 h-6 text-mystic-gold" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-serif italic text-mystic-gold leading-tight">Connect to Pollinations</h2>
+                    <p className="text-xs uppercase tracking-[0.2em] opacity-40 mt-1 font-sans">Free AI Image Generation</p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-3 mb-8">
+                  <p className="text-sm leading-relaxed opacity-70">
+                    <span className="font-serif italic text-base text-white/90">Cadavre Exquis</span> использует{" "}
+                    <a
+                      href="https://pollinations.ai"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-mystic-gold hover:underline inline-flex items-center gap-1"
+                    >
+                      Pollinations.ai <ExternalLink className="w-3 h-3" />
+                    </a>{" "}
+                    для генерации сюрреалистических персонажей.
+                  </p>
+                  <div className="grid grid-cols-3 gap-3 py-2">
+                    {[
+                      { label: "Бесплатно", desc: "без ключа", ok: true },
+                      { label: "Flux", desc: "модель генерации", ok: true },
+                      { label: "Pro ключ", desc: "доп. возможности", ok: false },
+                    ].map((item) => (
+                      <div key={item.label} className="flex flex-col gap-1 p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
+                        <span className={`text-xs font-bold ${item.ok ? "text-emerald-400" : "text-mystic-gold"}`}>{item.label}</span>
+                        <span className="text-[10px] opacity-40 leading-tight">{item.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* API Key Input */}
+                <div className="space-y-3 mb-8">
+                  <label className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-50">
+                    <Key className="w-3 h-3" />
+                    API Ключ <span className="normal-case opacity-60">(опционально)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      placeholder="Введите sk_ или pk_ ключ для Pro моделей..."
+                      value={welcomeApiKey}
+                      onChange={(e) => setWelcomeApiKey(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleConnect()}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:border-mystic-gold/60 transition-colors placeholder:opacity-20 pr-12"
+                    />
+                    {welcomeApiKey && (
+                      <button
+                        onClick={() => setWelcomeApiKey("")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] opacity-30 leading-relaxed">
+                    Получить ключ можно на{" "}
+                    <a href="https://auth.pollinations.ai" target="_blank" rel="noopener noreferrer" className="text-mystic-gold/60 hover:text-mystic-gold underline">auth.pollinations.ai</a>
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleConnect}
+                    className="flex-1 py-4 bg-mystic-gold text-black font-bold rounded-2xl hover:bg-yellow-500 transition-all shadow-lg flex items-center justify-center gap-2 group text-sm"
+                  >
+                    <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                    {welcomeApiKey ? "Подключиться с ключом" : "Начать бесплатно"}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
