@@ -41,6 +41,7 @@ export default function App() {
   const [welcomeApiKey, setWelcomeApiKey] = useState("");
   const [rememberKey, setRememberKey] = useState(true);
   const [canvasKey, setCanvasKey] = useState(0);
+  const [hoveredZone, setHoveredZone] = useState<Zone | null>(null);
 
   useEffect(() => {
     if (apiKey && rememberKey) {
@@ -326,150 +327,138 @@ export default function App() {
 
         {/* Center: Canvas */}
         <div className="lg:col-span-8 flex flex-col items-center order-1 lg:order-2">
-          <div className="relative w-full max-w-[450px] aspect-[9/16] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[40px] overflow-hidden border border-white/10 group bg-zinc-900/40">
-            
-            <AnimatePresence mode="wait">
-              {loading ? (
-                <motion.div 
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ y: "100%", opacity: 0 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-30"
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-16 h-16 border-4 border-mystic-gold border-t-transparent rounded-full animate-spin" />
-                    <p className="text-lg font-serif italic tracking-widest animate-pulse text-mystic-gold">Manifesting Character...</p>
-                  </div>
-                </motion.div>
-              ) : fullImage ? (
-                <motion.div
-                  key={canvasKey}
-                  initial={{ y: "-100%", opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: "100%", opacity: 0 }}
-                  transition={{ 
-                    type: "spring", 
-                    damping: 20, 
-                    stiffness: 120, 
-                    bounce: 0.45 
-                  }}
-                  className="relative w-full h-full flex flex-col"
-                >
-                  {/* Actual character display */}
-                  {!loadingZone ? (
-                    /* Unified static image for perfect alignment */
-                    <motion.img
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      src={fullImage}
-                      alt="Surrealist Character"
-                      className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    /* Segmented view for zone-specific loading animations */
-                    <div className="w-full h-full flex flex-col">
-                      <div className="h-[30%] relative overflow-hidden">
-                        {loadingZone !== "head" && (
-                          <img
-                            src={fullImage}
-                            className="absolute top-0 left-0 w-full h-[333.33%] object-cover grayscale"
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                      </div>
-                      <div className="h-[35%] relative overflow-hidden">
-                        {loadingZone !== "torso" && (
-                          <img
-                            src={fullImage}
-                            className="absolute top-[-85.714%] left-0 w-full h-[285.714%] object-cover grayscale"
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                      </div>
-                      <div className="h-[35%] relative overflow-hidden">
-                        {loadingZone !== "legs" && (
-                          <img
-                            src={fullImage}
-                            className="absolute bottom-0 left-0 w-full h-[285.714%] object-cover grayscale"
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                      </div>
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={canvasKey}
+              initial={{ y: "-100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ 
+                type: "spring", 
+                damping: 20, 
+                stiffness: 120, 
+                bounce: 0.45 
+              }}
+              onMouseLeave={() => setHoveredZone(null)}
+              className="relative w-full max-w-[450px] aspect-[9/16] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[40px] overflow-hidden border border-white/10 group bg-zinc-900/40"
+            >
+              <AnimatePresence mode="popLayout">
+                {loading ? (
+                  <motion.div 
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-30"
+                  >
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-16 h-16 border-4 border-mystic-gold border-t-transparent rounded-full animate-spin" />
+                      <p className="text-lg font-serif italic tracking-widest animate-pulse text-mystic-gold">Manifesting Character...</p>
                     </div>
-                  )}
+                  </motion.div>
+                ) : fullImage ? (
+                  /* Character Content */
+                  <div className="relative w-full h-full flex flex-col">
+                    {!loadingZone ? (
+                      <motion.img
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        src={fullImage}
+                        alt="Surrealist Character"
+                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col">
+                        <div className="h-[30%] relative overflow-hidden">
+                          {loadingZone !== "head" && (
+                            <img src={fullImage} className="absolute top-0 left-0 w-full h-[333.33%] object-cover grayscale" referrerPolicy="no-referrer" />
+                          )}
+                        </div>
+                        <div className="h-[35%] relative overflow-hidden border-y border-white/5">
+                          {loadingZone !== "torso" && (
+                            <img src={fullImage} className="absolute top-[-85.714%] left-0 w-full h-[285.714%] object-cover grayscale" referrerPolicy="no-referrer" />
+                          )}
+                        </div>
+                        <div className="h-[35%] relative overflow-hidden">
+                          {loadingZone !== "legs" && (
+                            <img src={fullImage} className="absolute bottom-0 left-0 w-full h-[285.714%] object-cover grayscale" referrerPolicy="no-referrer" />
+                          )}
+                        </div>
+                      </div>
+                    )}
 
-                  {/* Zone Refinement Indicators */}
-                  {loadingZone && (
-                     <motion.div 
+                    {/* Zone Refinement Indicators */}
+                    {loadingZone && (
+                      <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center bg-black/10 backdrop-blur-[2px]"
-                     >
+                      >
                         <div className="px-4 py-2 glass rounded-full flex items-center gap-2">
-                           <RefreshCw className="w-3 h-3 animate-spin text-mystic-gold" />
-                           <span className="text-[10px] uppercase tracking-widest font-bold">Refining {loadingZone}...</span>
+                          <RefreshCw className="w-3 h-3 animate-spin text-mystic-gold" />
+                          <span className="text-[10px] uppercase tracking-widest font-bold">Refining {loadingZone}...</span>
                         </div>
-                     </motion.div>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div 
-                  key="placeholder"
-                  className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center bg-zinc-900/20"
-                >
-                  <div className="opacity-20 flex flex-col items-center">
-                    <Ghost className="w-24 h-24 mb-6" />
-                    <h3 className="text-2xl font-serif italic mb-2">The Void Awaits</h3>
-                    <p className="text-[10px] uppercase tracking-[0.3em] max-w-xs mx-auto leading-loose">
-                      Define the head, torso, and legs to summon a consistent surrealist entity.
-                    </p>
+                      </motion.div>
+                    )}
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Interactive Zones Overlay */}
-            {fullImage && !loading && (
-              <div className="absolute inset-0 flex flex-col z-10">
-                {(["head", "torso", "legs"] as Zone[]).map((zone) => (
-                  <div 
-                    key={zone}
-                    className={`flex-1 relative group/zone transition-colors ${activeZone === zone ? "bg-white/5" : "hover:bg-white/5"}`}
-                    onClick={() => setActiveZone(zone)}
+                ) : (
+                  <motion.div 
+                    key="placeholder"
+                    className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center bg-zinc-900/20"
                   >
-                    {/* Zone Border Highlight */}
-                    <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${activeZone === zone ? "border-mystic-gold/20 bg-mystic-gold/5" : "group-hover/zone:border-mystic-gold/10"}`} />
-                    
-                    {/* Left/Right Buttons */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); editPart(zone); }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); editPart(zone); }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-
-                    <div className={`absolute left-1/2 -translate-x-1/2 top-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${activeZone === zone ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>
-                      {zone}
+                    <div className="opacity-20 flex flex-col items-center">
+                      <Ghost className="w-24 h-24 mb-6" />
+                      <h3 className="text-2xl font-serif italic mb-2">The Void Awaits</h3>
+                      <p className="text-[10px] uppercase tracking-[0.3em] max-w-xs mx-auto leading-loose">
+                        Define the head, torso, and legs to summon a consistent surrealist entity.
+                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {/* Decorative Frame */}
-            <div className="absolute inset-0 pointer-events-none border-[12px] border-black/20 rounded-[40px]" />
-            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]" />
-          </div>
+              {/* Interactive Zones Overlay */}
+              {fullImage && !loading && (
+                <div className="absolute inset-0 flex flex-col z-10">
+                  {(["head", "torso", "legs"] as Zone[]).map((zone) => (
+                    <div 
+                      key={zone}
+                      className={`flex-1 relative group/zone transition-colors`}
+                      onMouseEnter={() => setHoveredZone(zone)}
+                      onClick={() => setActiveZone(zone)}
+                    >
+                      {/* Zone Border Highlight - shows on hover OR if active AND cursor is within canvas */}
+                      <div className={`absolute inset-0 border-y border-mystic-gold/0 transition-all duration-500 ${hoveredZone === zone ? "border-mystic-gold/20 bg-mystic-gold/5" : ""}`} />
+                      
+                      {/* Left/Right Buttons */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); editPart(zone); }}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); editPart(zone); }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+
+                      <div className={`absolute left-1/2 -translate-x-1/2 top-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${hoveredZone === zone ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>
+                        {zone}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Decorative Frame */}
+              <div className="absolute inset-0 pointer-events-none border-[12px] border-black/20 rounded-[40px]" />
+              <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]" />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 
