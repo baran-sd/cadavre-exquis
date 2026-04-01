@@ -326,13 +326,14 @@ export default function App() {
         <div className="lg:col-span-8 flex flex-col items-center order-1 lg:order-2">
           <div className="relative w-full max-w-[450px] aspect-[9/16] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[40px] overflow-hidden border border-white/10 group bg-zinc-900/40">
             
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode="wait">
               {loading ? (
                 <motion.div 
                   key="loading"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  exit={{ y: "100%", opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
                   className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-20"
                 >
                   <div className="flex flex-col items-center gap-4">
@@ -340,29 +341,86 @@ export default function App() {
                     <p className="text-lg font-serif italic tracking-widest animate-pulse text-mystic-gold">Manifesting Character...</p>
                   </div>
                 </motion.div>
-              ) : loadingZone ? (
-                <motion.div 
-                  key="loading-zone"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20"
-                >
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-mystic-gold border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm font-serif italic tracking-widest animate-pulse">Refining {loadingZone}...</p>
-                  </div>
-                </motion.div>
               ) : fullImage ? (
-                <motion.img
-                  key="image"
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  src={fullImage}
-                  alt="Surrealist Character"
-                  className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
-                  referrerPolicy="no-referrer"
-                />
+                <motion.div
+                  key={fullImage}
+                  initial={{ y: "-100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "100%", opacity: 0 }}
+                  transition={{ 
+                    type: "spring", 
+                    damping: 20, 
+                    stiffness: 120, 
+                    bounce: 0.45 
+                  }}
+                  className="relative w-full h-full flex flex-col"
+                >
+                  {/* Head Zone Display */}
+                  <div className="h-[30%] relative overflow-hidden bg-zinc-900/40">
+                    <AnimatePresence>
+                      {loadingZone !== "head" && (
+                        <motion.img
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          src={fullImage}
+                          alt="Head Section"
+                          className="absolute top-0 left-0 w-full h-[333.33%] object-cover grayscale hover:grayscale-0 transition-all duration-1000 origin-top"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Torso Zone Display */}
+                  <div className="h-[35%] relative overflow-hidden bg-zinc-900/40 border-y border-white/5">
+                    <AnimatePresence>
+                      {loadingZone !== "torso" && (
+                        <motion.img
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          src={fullImage}
+                          alt="Torso Section"
+                          className="absolute top-[-85%] left-0 w-full h-[285.7%] object-cover grayscale hover:grayscale-0 transition-all duration-1000"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Legs Zone Display */}
+                  <div className="h-[35%] relative overflow-hidden bg-zinc-900/40">
+                    <AnimatePresence>
+                      {loadingZone !== "legs" && (
+                        <motion.img
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          src={fullImage}
+                          alt="Legs Section"
+                          className="absolute bottom-0 left-0 w-full h-[285.7%] object-cover grayscale hover:grayscale-0 transition-all duration-1000 origin-bottom"
+                          referrerPolicy="no-referrer"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Zone Refinement Indicators */}
+                  {loadingZone && (
+                     <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center bg-black/10 backdrop-blur-[2px]"
+                     >
+                        <div className="px-4 py-2 glass rounded-full flex items-center gap-2">
+                           <RefreshCw className="w-3 h-3 animate-spin text-mystic-gold" />
+                           <span className="text-[10px] uppercase tracking-widest font-bold">Refining {loadingZone}...</span>
+                        </div>
+                     </motion.div>
+                  )}
+                </motion.div>
               ) : (
                 <motion.div 
                   key="placeholder"
