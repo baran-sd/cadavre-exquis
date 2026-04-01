@@ -1,43 +1,7 @@
-import { useState, useCallback, Component, ErrorInfo, ReactNode } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 import { generateFullCharacter, editCharacterPart, Zone } from "./lib/gemini";
-
-class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
-  state: { hasError: boolean, error: Error | null } = { hasError: false, error: null };
-  props: { children: ReactNode } = { children: null as any };
-  
-  constructor(props: {children: ReactNode}) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-black text-red-500 flex flex-col items-center justify-center p-8 text-center">
-          <AlertCircle className="w-16 h-16 mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
-          <pre className="glass p-4 rounded-xl text-xs overflow-auto max-w-full text-white/70">
-            {this.state.error?.toString()}
-          </pre>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full transition-all"
-          >
-            Reload Website
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 interface PartState {
   prompt: string;
@@ -50,7 +14,7 @@ const ATMOSPHERES = [
   { id: "ethereal", label: "Ethereal", icon: Sparkles, color: "from-teal-900/40 to-indigo-900/40" },
 ];
 
-function App() {
+export default function App() {
   const [parts, setParts] = useState<Record<Zone, PartState>>({
     head: { prompt: "" },
     torso: { prompt: "" },
@@ -72,7 +36,9 @@ function App() {
         legsPrompt: parts.legs.prompt,
         atmosphere: atmosphere.label,
       });
-      setFullImage(image);
+      if (image) {
+        setFullImage(image);
+      }
     } catch (error) {
       console.error("Failed to generate full character:", error);
     } finally {
@@ -133,9 +99,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-start p-4 md:p-8">
-      <div className="atmosphere" />
-      <div className="grain" />
+    <div className="min-h-screen relative flex flex-col items-center justify-start p-4 md:p-8 bg-zinc-950 text-white selection:bg-mystic-gold/30">
+      <div className="atmosphere pointer-events-none" />
+      <div className="grain pointer-events-none" />
 
       {/* Header */}
       <header className="w-full max-w-6xl flex justify-between items-center mb-8 z-10">
@@ -155,34 +121,37 @@ function App() {
         </button>
       </header>
 
-      <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start z-10">
+      <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start z-10 flex-1">
         
         {/* Left Panel: Controls */}
         <div className="lg:col-span-4 space-y-6 order-2 lg:order-1">
-          <section className="glass p-6 rounded-3xl space-y-6">
+          <section className="glass p-6 rounded-3xl space-y-6 shadow-2xl">
             <div className="flex items-center gap-2 mb-2">
               <Layers className="w-4 h-4 text-mystic-gold" />
               <h2 className="text-sm uppercase tracking-widest font-semibold opacity-70">Atmosphere</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {ATMOSPHERES.map((atmo) => (
-                <button
-                  key={atmo.id}
-                  onClick={() => setAtmosphere(atmo)}
-                  className={`flex items-center gap-3 p-3 rounded-2xl transition-all border ${
-                    atmosphere.id === atmo.id 
-                      ? "bg-white/10 border-mystic-gold text-mystic-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]" 
-                      : "bg-white/5 border-transparent hover:bg-white/10"
-                  }`}
-                >
-                  <atmo.icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{atmo.label}</span>
-                </button>
-              ))}
+              {ATMOSPHERES.map((atmo) => {
+                const IconComp = atmo.icon;
+                return (
+                  <button
+                    key={atmo.id}
+                    onClick={() => setAtmosphere(atmo)}
+                    className={`flex items-center gap-3 p-3 rounded-2xl transition-all border ${
+                      atmosphere.id === atmo.id 
+                        ? "bg-white/10 border-mystic-gold text-mystic-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]" 
+                        : "bg-white/5 border-transparent hover:bg-white/10"
+                    }`}
+                  >
+                    <IconComp className="w-4 h-4" />
+                    <span className="text-sm font-medium">{atmo.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </section>
 
-          <section className="glass p-6 rounded-3xl space-y-6">
+          <section className="glass p-6 rounded-3xl space-y-6 shadow-2xl">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-mystic-gold" />
               <h2 className="text-sm uppercase tracking-widest font-semibold opacity-70">Segments</h2>
@@ -216,7 +185,7 @@ function App() {
                     placeholder={`Describe the ${zone}...`}
                     value={parts[zone].prompt}
                     onChange={(e) => setParts(prev => ({ ...prev, [zone]: { ...prev[zone], prompt: e.target.value } }))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-mystic-gold transition-colors"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-mystic-gold transition-colors text-white"
                   />
                 </div>
               ))}
@@ -225,13 +194,13 @@ function App() {
             <div className="flex gap-3">
               <button
                 onClick={setRandomPrompts}
-                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
+                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest font-medium"
               >
                 Randomize
               </button>
               <button
                 onClick={clearAll}
-                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest"
+                className="flex-1 py-3 glass rounded-2xl hover:bg-white/10 transition-all text-xs uppercase tracking-widest font-medium"
               >
                 Clear
               </button>
@@ -250,7 +219,7 @@ function App() {
           <button
             onClick={downloadComposition}
             disabled={!fullImage}
-            className="w-full py-4 glass rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 disabled:opacity-30"
+            className="w-full py-4 glass rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 disabled:opacity-30 border-white/5"
           >
             <Download className="w-5 h-5" />
             PRESERVE MASTERPIECE
@@ -259,9 +228,9 @@ function App() {
 
         {/* Center: Canvas */}
         <div className="lg:col-span-8 flex flex-col items-center order-1 lg:order-2">
-          <div className="relative w-full max-w-[450px] aspect-[9/16] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] rounded-[40px] overflow-hidden border border-white/10 group bg-zinc-900/20">
+          <div className="relative w-full max-w-[450px] aspect-[9/16] flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.8)] rounded-[40px] overflow-hidden border border-white/10 group bg-zinc-900/40">
             
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout">
               {loading ? (
                 <motion.div 
                   key="loading"
@@ -291,8 +260,8 @@ function App() {
               ) : fullImage ? (
                 <motion.img
                   key="image"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   src={fullImage}
                   alt="Surrealist Character"
                   className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000"
@@ -301,12 +270,12 @@ function App() {
               ) : (
                 <motion.div 
                   key="placeholder"
-                  className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center"
+                  className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center bg-zinc-900/20"
                 >
-                  <div className="opacity-20">
-                    <Ghost className="w-24 h-24 mx-auto mb-6" />
+                  <div className="opacity-20 flex flex-col items-center">
+                    <Ghost className="w-24 h-24 mb-6" />
                     <h3 className="text-2xl font-serif italic mb-2">The Void Awaits</h3>
-                    <p className="text-xs uppercase tracking-[0.3em] max-w-xs mx-auto">
+                    <p className="text-[10px] uppercase tracking-[0.3em] max-w-xs mx-auto leading-loose">
                       Define the head, torso, and legs to summon a consistent surrealist entity.
                     </p>
                   </div>
@@ -314,7 +283,7 @@ function App() {
               )}
             </AnimatePresence>
 
-            {/* Interactive Zones Overlay with Navigation Buttons */}
+            {/* Interactive Zones Overlay */}
             {fullImage && !loading && (
               <div className="absolute inset-0 flex flex-col z-10">
                 {(["head", "torso", "legs"] as Zone[]).map((zone) => (
@@ -323,31 +292,20 @@ function App() {
                     className={`flex-1 relative group/zone transition-colors ${activeZone === zone ? "bg-white/5" : "hover:bg-white/5"}`}
                     onClick={() => setActiveZone(zone)}
                   >
-                    {/* Left Button */}
+                    {/* Left/Right Buttons */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editPart(zone);
-                      }}
-                      disabled={!!loadingZone}
-                      className={`absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold disabled:opacity-30 ${loadingZone === zone ? "animate-pulse" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); editPart(zone); }}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-
-                    {/* Right Button */}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editPart(zone);
-                      }}
-                      disabled={!!loadingZone}
-                      className={`absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold disabled:opacity-30 ${loadingZone === zone ? "animate-pulse" : ""}`}
+                      onClick={(e) => { e.stopPropagation(); editPart(zone); }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-3 glass rounded-full opacity-0 group-hover/zone:opacity-100 transition-all hover:text-mystic-gold"
                     >
                       <ChevronRight className="w-5 h-5" />
                     </button>
 
-                    {/* Zone Label Indicator */}
                     <div className={`absolute left-1/2 -translate-x-1/2 top-2 px-3 py-1 rounded-full text-[8px] uppercase tracking-[0.3em] glass opacity-0 group-hover/zone:opacity-100 transition-opacity pointer-events-none ${activeZone === zone ? "text-mystic-gold border-mystic-gold/30" : "text-white/40"}`}>
                       {zone}
                     </div>
@@ -377,7 +335,7 @@ function App() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="glass max-w-2xl p-8 md:p-12 rounded-[40px] relative overflow-hidden"
+              className="glass max-w-2xl p-8 md:p-12 rounded-[40px] relative overflow-hidden shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-mystic-gold/10 blur-3xl rounded-full -mr-16 -mt-16" />
@@ -387,14 +345,11 @@ function App() {
                   Traditional <span className="italic font-serif text-lg">Cadavre Exquis</span> often results in disjointed figures. 
                   This version uses AI to maintain <span className="text-mystic-gold font-medium">anatomical and stylistic consistency</span>.
                 </p>
-                <p>
-                  1. **Conjure**: Enter prompts for all zones and generate a full, unified character.<br/>
-                  2. **Refine**: Use the refresh icon on a specific zone to modify only that part of the existing image.<br/>
-                  3. **Atmosphere**: Change the mood to shift the entire character's stylistic direction.
-                </p>
-                <p>
-                  The AI uses the current image as context when you refine a zone, ensuring the new part fits perfectly with the rest of the body.
-                </p>
+                <ul className="space-y-3 list-none">
+                  <li>1. **Conjure**: Enter prompts for all zones and generate a full, unified character.</li>
+                  <li>2. **Refine**: Use the refresh icon on a specific zone to modify only that part.</li>
+                  <li>3. **Atmosphere**: Change the mood to shift the entire stylistic direction.</li>
+                </ul>
               </div>
               <button
                 onClick={() => setShowInfo(false)}
@@ -412,13 +367,5 @@ function App() {
         Manifested with Gemini AI &bull; 1925 - 2026
       </footer>
     </div>
-  );
-}
-
-export default function Root() {
-  return (
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
   );
 }
