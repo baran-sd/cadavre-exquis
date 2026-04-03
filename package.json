@@ -1,17 +1,19 @@
 {
-  "name": "react-example",
+  "name": "cadavre-exquis",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://baran-sd.github.io/cadavre-exquis/",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "@google/genai": "^1.29.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
