@@ -70,12 +70,11 @@ export default function App() {
     
     setLoadingBalance(true);
     try {
-      // Try different possible endpoints
       let balanceData = null;
       
-      // Try user info endpoint first
+      // Try enter.pollinations.ai account endpoint (official dashboard)
       try {
-        const response = await fetch("https://api.pollinations.ai/user", {
+        const response = await fetch("https://enter.pollinations.ai/api/account", {
           headers: {
             "Authorization": `Bearer ${apiKey}`
           }
@@ -83,16 +82,17 @@ export default function App() {
         
         if (response.ok) {
           const data = await response.json();
-          balanceData = data.balance || data.credits || data.remaining_credits || null;
+          // Common response fields: balance, credits, remaining_credits, usage
+          balanceData = data.balance ?? data.credits ?? data.remaining_credits ?? data.usage?.remaining ?? null;
         }
       } catch (e) {
-        console.log("User endpoint failed, trying balance endpoint...");
+        console.log("Enter account endpoint failed, trying api.pollinations.ai...");
       }
       
-      // If first attempt failed, try balance endpoint
+      // If first attempt failed, try alternative endpoints
       if (balanceData === null) {
         try {
-          const response = await fetch("https://api.pollinations.ai/balance", {
+          const response = await fetch("https://api.pollinations.ai/account", {
             headers: {
               "Authorization": `Bearer ${apiKey}`
             }
@@ -100,15 +100,32 @@ export default function App() {
           
           if (response.ok) {
             const data = await response.json();
-            balanceData = data.balance || data.credits || 0;
+            balanceData = data.balance ?? data.credits ?? data.remaining_credits ?? 0;
           }
         } catch (e) {
-          console.log("Balance endpoint also failed");
+          console.log("API account endpoint also failed");
         }
       }
       
-      // If we got valid balance data (> 0 or explicitly 0), show it
-      // Otherwise fall back to generation counter
+      // Last fallback - try balance endpoint
+      if (balanceData === null) {
+        try {
+          const response = await fetch("https://gen.pollinations.ai/balance", {
+            headers: {
+              "Authorization": `Bearer ${apiKey}`
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            balanceData = data.balance ?? data.credits ?? 0;
+          }
+        } catch (e) {
+          console.log("Balance endpoint failed");
+        }
+      }
+      
+      // Show balance only if it's a valid number
       if (balanceData !== null && balanceData !== undefined) {
         setBalance(balanceData);
       } else {
