@@ -618,7 +618,7 @@ export default function App() {
                 {/* Description */}
                 <div className="space-y-3 mb-8">
                   <p className="text-sm leading-relaxed opacity-70">
-                    <span className="font-serif italic text-base text-white/90">Cadavre Exquis</span> использует{" "}
+                    <span className="font-serif italic text-base text-white/90">Cadavre Exquis</span> uses{" "}
                     <a
                       href="https://pollinations.ai"
                       target="_blank"
@@ -627,13 +627,13 @@ export default function App() {
                     >
                       Pollinations.ai <ExternalLink className="w-3 h-3" />
                     </a>{" "}
-                    для генерации сюрреалистических персонажей.
+                    for generating surrealist characters.
                   </p>
                   <div className="grid grid-cols-3 gap-3 py-2">
                     {[
-                      { label: "Бесплатно", desc: "без ключа", ok: true },
-                      { label: "Flux", desc: "модель генерации", ok: true },
-                      { label: "Pro ключ", desc: "доп. возможности", ok: false },
+                      { label: "Free", desc: "no key needed", ok: true },
+                      { label: "Flux", desc: "generation model", ok: true },
+                      { label: "Auto", desc: "instant connect", ok: true },
                     ].map((item) => (
                       <div key={item.label} className="flex flex-col gap-1 p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
                         <span className={`text-xs font-bold ${item.ok ? "text-emerald-400" : "text-mystic-gold"}`}>{item.label}</span>
@@ -643,67 +643,27 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* API Key Input */}
+                {/* Auto Connect Button */}
                 <div className="space-y-4 mb-8">
-                  <div className="flex justify-between items-center">
-                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-50">
-                      <Key className="w-3 h-3" />
-                      API Ключ <span className="normal-case opacity-60">(рекомендован pk_)</span>
-                    </label>
-                    <div className="group relative">
-                      <Info className="w-3.5 h-3.5 opacity-30 hover:opacity-100 cursor-help transition-opacity" />
-                      <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-zinc-900 border border-white/10 rounded-xl text-[10px] leading-relaxed opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-2xl z-50">
-                        <span className="text-mystic-gold font-bold">pk_</span> — для браузеров (безопасно).<br/>
-                        <span className="text-mystic-gold font-bold">sk_</span> — секретный ключ.
-                      </div>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      placeholder="Введите pk_ или sk_ ключ..."
-                      value={welcomeApiKey}
-                      onChange={(e) => setWelcomeApiKey(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleConnect()}
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:border-mystic-gold/60 transition-colors placeholder:opacity-20 pr-12"
-                    />
-                    {welcomeApiKey && (
-                      <button
-                        onClick={() => setWelcomeApiKey("")}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                       <input 
-                         type="checkbox" 
-                         id="remember" 
-                         checked={rememberKey}
-                         onChange={(e) => setRememberKey(e.target.checked)}
-                         className="w-4 h-4 rounded border-white/10 bg-white/5 accent-mystic-gold"
-                       />
-                       <label htmlFor="remember" className="text-[10px] opacity-40 cursor-pointer hover:opacity-60 transition-opacity uppercase tracking-widest">Запомнить меня</label>
-                    </div>
-                    <p className="text-[10px] opacity-30">
-                      Личный кабинет:{" "}
-                      <a href="https://enter.pollinations.ai" target="_blank" rel="noopener noreferrer" className="text-mystic-gold/60 hover:text-mystic-gold underline">enter.pollinations.ai</a>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3">
                   <button
                     onClick={handleConnect}
-                    className="flex-1 py-4 bg-mystic-gold text-black font-bold rounded-2xl hover:bg-yellow-500 transition-all shadow-lg flex items-center justify-center gap-2 group text-sm"
+                    className="w-full py-5 bg-gradient-to-r from-mystic-gold to-yellow-500 text-black font-bold rounded-2xl hover:from-yellow-500 hover:to-mystic-gold transition-all shadow-[0_0_30px_rgba(212,175,55,0.3)] flex items-center justify-center gap-3 group text-base"
                   >
-                    <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                    {welcomeApiKey ? "Подключиться с ключом" : "Начать бесплатно"}
+                    <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                    Connect Automatically
+                    <Wifi className="w-5 h-5 group-hover:scale-110 transition-transform" />
                   </button>
+                  
+                  <p className="text-[10px] opacity-30 text-center leading-relaxed">
+                    Already configured with environment API key.<br/>
+                    No personal account required for basic usage.
+                  </p>
+                </div>
+
+                {/* Footer Info */}
+                <div className="flex items-center justify-center gap-2 text-[10px] opacity-40">
+                  <Info className="w-3 h-3" />
+                  <span>Premium features may require API key upgrade</span>
                 </div>
               </div>
             </motion.div>
