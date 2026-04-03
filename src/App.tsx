@@ -46,6 +46,8 @@ export default function App() {
     const saved = localStorage.getItem("generation_count");
     return saved ? parseInt(saved, 10) : 0;
   });
+  const [showAuth, setShowAuth] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState("");
 
   useEffect(() => {
     if (apiKey && rememberKey) {
@@ -164,6 +166,24 @@ export default function App() {
     sessionStorage.setItem("welcome_dismissed", "true");
   };
 
+  const handleAuthSave = () => {
+    const trimmedKey = tempApiKey.trim();
+    if (trimmedKey) {
+      setApiKey(trimmedKey);
+      localStorage.setItem("pollinations_api_key", trimmedKey);
+    } else {
+      setApiKey("");
+      localStorage.removeItem("pollinations_api_key");
+    }
+    setShowAuth(false);
+  };
+
+  const handleLogout = () => {
+    setApiKey("");
+    setTempApiKey("");
+    localStorage.removeItem("pollinations_api_key");
+  };
+
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-start p-4 md:p-8 bg-zinc-950 text-white selection:bg-mystic-gold/30">
       <div className="atmosphere pointer-events-none" />
@@ -186,6 +206,15 @@ export default function App() {
             <span className="text-sm font-medium text-mystic-gold">{generationCount}</span>
             <span className="text-[10px] opacity-40 uppercase tracking-wider">Generations</span>
           </div>
+          
+          {/* Auth Button */}
+          <button 
+            onClick={() => setShowAuth(true)}
+            className={`p-3 glass rounded-full hover:bg-white/10 transition-colors ${apiKey ? "text-emerald-400" : "text-mystic-gold hover:text-white"}`}
+            title={apiKey ? "API Key Set" : "Set API Key"}
+          >
+            <Key className="w-5 h-5" />
+          </button>
           
           <button 
             onClick={() => setShowWelcome(true)}
@@ -675,6 +704,126 @@ export default function App() {
                 <div className="flex items-center justify-center gap-2 text-[10px] opacity-40">
                   <Info className="w-3 h-3" />
                   <span>Premium features may require API key upgrade</span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Auth Modal */}
+      <AnimatePresence>
+        {showAuth && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
+            onClick={() => setShowAuth(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 30, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.85, y: 30, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 180 }}
+              className="glass max-w-lg w-full rounded-[40px] overflow-hidden shadow-[0_0_120px_rgba(212,175,55,0.15)] border border-white/10 relative"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Decorative glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-mystic-gold/20 blur-[60px] rounded-full -mt-10 pointer-events-none" />
+              
+              <div className="p-8 md:p-10 relative">
+                {/* Header */}
+                <div className="flex items-start gap-4 mb-8">
+                  <div className="w-14 h-14 rounded-2xl bg-mystic-gold/10 border border-mystic-gold/30 flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(212,175,55,0.15)]">
+                    <Key className="w-6 h-6 text-mystic-gold" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-serif italic text-mystic-gold leading-tight">API Configuration</h2>
+                    <p className="text-xs uppercase tracking-[0.2em] opacity-40 mt-1 font-sans">Pollinations Authentication</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAuth(false)}
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                  >
+                    <X className="w-5 h-5 opacity-50" />
+                  </button>
+                </div>
+
+                {/* Current Status */}
+                <div className="mb-8 p-4 rounded-2xl bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-2 h-2 rounded-full ${apiKey ? "bg-emerald-400" : "bg-amber-400"} animate-pulse`} />
+                    <span className="text-sm font-medium">
+                      {apiKey ? "API Key Active" : "No API Key Set"}
+                    </span>
+                  </div>
+                  {apiKey && (
+                    <p className="text-xs opacity-40 font-mono truncate">
+                      {apiKey.substring(0, 8)}...{apiKey.substring(apiKey.length - 4)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Get API Key Section */}
+                <div className="space-y-4 mb-8">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-mystic-gold/10 to-amber-500/10 border border-mystic-gold/20">
+                    <h3 className="text-sm font-bold text-mystic-gold mb-2 flex items-center gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      Get Your Free API Key
+                    </h3>
+                    <ol className="text-xs space-y-2 opacity-80 leading-relaxed">
+                      <li>1. Go to <a href="https://enter.pollinations.ai/" target="_blank" rel="noopener noreferrer" className="text-mystic-gold hover:underline font-medium">enter.pollinations.ai</a></li>
+                      <li>2. Sign in with GitHub or Google</li>
+                      <li>3. Navigate to API Keys section</li>
+                      <li>4. Create a new key (pk_ for web use)</li>
+                      <li>5. Copy and paste below</li>
+                    </ol>
+                  </div>
+
+                  {/* API Key Input */}
+                  <div>
+                    <label className="flex items-center gap-2 text-xs uppercase tracking-widest opacity-50 mb-2">
+                      <Key className="w-3 h-3" />
+                      Paste Your API Key
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="sk_... or pk_..."
+                      value={tempApiKey}
+                      onChange={(e) => setTempApiKey(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAuthSave()}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm focus:outline-none focus:border-mystic-gold/60 transition-colors placeholder:opacity-20 pr-12 font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  {apiKey && (
+                    <button
+                      onClick={handleLogout}
+                      className="px-6 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold rounded-2xl transition-all border border-red-500/30 text-sm"
+                    >
+                      Remove Key
+                    </button>
+                  )}
+                  <button
+                    onClick={handleAuthSave}
+                    className="flex-1 py-4 bg-mystic-gold text-black font-bold rounded-2xl hover:bg-yellow-500 transition-all shadow-lg flex items-center justify-center gap-2 group text-sm"
+                  >
+                    <Sparkles className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                    {apiKey ? "Update Key" : "Save Key"}
+                  </button>
+                </div>
+
+                {/* Info */}
+                <div className="mt-6 flex items-start gap-2 text-[10px] opacity-40">
+                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                  <p>
+                    Free tier includes generous monthly credits. 
+                    pk_ keys are safe for web use. sk_ keys should be kept secret.
+                  </p>
                 </div>
               </div>
             </motion.div>
