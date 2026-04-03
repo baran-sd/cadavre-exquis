@@ -13,7 +13,7 @@ export interface GenerationParams {
 
 export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPrompt, atmosphere, customApiKey }: GenerationParams): Promise<string> {
   const apiKey = customApiKey || import.meta.env.VITE_POLLEN_API_KEY || "";
-  
+
   const combinedPrompt = `A full-body surrealist character. 
   Style: 1920s surrealism, dream-like, high contrast, mysterious. 
   Atmosphere: ${atmosphere}.
@@ -43,9 +43,9 @@ export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPromp
     });
 
     if (!response.ok) {
-       // Fallback for better UX if key fails/forbidden
-       const seed = Math.floor(Math.random() * 999999);
-       return `https://image.pollinations.ai/prompt/${encodeURIComponent(combinedPrompt)}?width=1024&height=1792&model=flux&nologo=true&seed=${seed}`;
+      // Fallback for better UX if key fails/forbidden
+      const seed = Math.floor(Math.random() * 999999);
+      return `https://image.pollinations.ai/prompt/${encodeURIComponent(combinedPrompt)}?width=1024&height=1792&model=flux&nologo=true&seed=${seed}`;
     }
 
     const data = await response.json();
@@ -58,10 +58,10 @@ export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPromp
 
 export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, atmosphere, baseImage, zoneToEdit, customApiKey, seed }: GenerationParams): Promise<string | null> {
   if (!baseImage || !zoneToEdit) return null;
-  
+
   const apiKey = customApiKey || import.meta.env.VITE_POLLEN_API_KEY || "";
   const currentPrompt = zoneToEdit === 'head' ? headPrompt : zoneToEdit === 'torso' ? torsoPrompt : legsPrompt;
-  
+
   const editPrompt = `SURREALIST IMAGE EDITING TASK:
   You are modifying a specific zone of an existing surrealist character.
   
@@ -93,7 +93,7 @@ export async function editCharacterPart({ headPrompt, torsoPrompt, legsPrompt, a
     });
 
     if (!response.ok) {
-      const editFallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(editPrompt)}?width=1024&height=1792&model=flux&seed=${Math.floor(Math.random()*9999)}`;
+      const editFallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(editPrompt)}?width=1024&height=1792&model=flux&seed=${Math.floor(Math.random() * 9999)}`;
       return editFallback;
     }
 
