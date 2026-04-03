@@ -14,6 +14,10 @@ export interface GenerationParams {
 export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPrompt, atmosphere, customApiKey }: GenerationParams): Promise<string> {
   const apiKey = customApiKey || import.meta.env.VITE_POLLEN_API_KEY || "";
 
+  console.log("🎨 Generating with API key:", apiKey ? "Present" : "Using fallback");
+  console.log("Custom API Key:", customApiKey ? "Present" : "Not provided");
+  console.log("Env API Key:", import.meta.env.VITE_POLLEN_API_KEY ? "Present" : "Not available");
+
   const combinedPrompt = `A full-body surrealist character. 
   Style: 1920s surrealism, dream-like, high contrast, mysterious. 
   Atmosphere: ${atmosphere}.
@@ -42,13 +46,20 @@ export async function generateFullCharacter({ headPrompt, torsoPrompt, legsPromp
       })
     });
 
+    console.log("Response status:", response.status);
+
     if (!response.ok) {
+      const errorData = await response.json();
+      console.error("API Error:", errorData);
+      
       // Fallback for better UX if key fails/forbidden
+      console.log("Using fallback URL without API key...");
       const seed = Math.floor(Math.random() * 999999);
       return `https://image.pollinations.ai/prompt/${encodeURIComponent(combinedPrompt)}?width=1024&height=1792&model=flux&nologo=true&seed=${seed}`;
     }
 
     const data = await response.json();
+    console.log("✅ Success! Image generated");
     return `data:image/png;base64,${data.data[0].b64_json}`;
   } catch (error) {
     console.error("Full character generation error:", error);
