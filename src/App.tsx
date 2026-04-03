@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, Clock, X, Key, Wifi, ExternalLink } from "lucide-react";
+import { Sparkles, RefreshCw, Download, Info, Layers, Wind, Ghost, Zap, ChevronLeft, ChevronRight, Clock, X, Key, Wifi, ExternalLink, Coins, CreditCard } from "lucide-react";
 import { generateFullCharacter, editCharacterPart, Zone } from "./lib/gemini";
 
 interface PartState {
@@ -42,6 +42,22 @@ export default function App() {
   const [rememberKey, setRememberKey] = useState(true);
   const [canvasKey, setCanvasKey] = useState(0);
   const [hoveredZone, setHoveredZone] = useState<Zone | null>(null);
+  const [generationCount, setGenerationCount] = useState(() => {
+    const saved = localStorage.getItem("generation_count");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  // Track generations
+  useEffect(() => {
+    if (loading && !loadingZone) {
+      // Full generation starting
+      setGenerationCount(prev => {
+        const newCount = prev + 1;
+        localStorage.setItem("generation_count", newCount.toString());
+        return newCount;
+      });
+    }
+  }, [loading]);
 
   useEffect(() => {
     if (apiKey && rememberKey) {
@@ -175,7 +191,14 @@ export default function App() {
             Consistent AI Surrealism
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          {/* Balance/Generation Counter */}
+          <div className="flex items-center gap-2 px-4 py-2 glass rounded-full border border-white/10">
+            <Coins className="w-4 h-4 text-mystic-gold" />
+            <span className="text-sm font-medium text-mystic-gold">{generationCount}</span>
+            <span className="text-[10px] opacity-40 uppercase tracking-wider">Generations</span>
+          </div>
+          
           <button 
             onClick={() => setShowWelcome(true)}
             className={`p-3 glass rounded-full hover:bg-white/10 transition-colors ${apiKey ? "text-emerald-400" : "text-mystic-gold hover:text-white"}`}
