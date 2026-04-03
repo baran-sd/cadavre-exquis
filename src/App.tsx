@@ -46,6 +46,8 @@ export default function App() {
     const saved = localStorage.getItem("generation_count");
     return saved ? parseInt(saved, 10) : 0;
   });
+  const [balance, setBalance] = useState<number | null>(null);
+  const [loadingBalance, setLoadingBalance] = useState(false);
 
   // Track generations
   useEffect(() => {
@@ -58,6 +60,48 @@ export default function App() {
       });
     }
   }, [loading]);
+
+  // Fetch balance from Pollinations API
+  const fetchBalance = useCallback(async () => {
+    if (!apiKey) {
+      setBalance(null);
+      return;
+    }
+    
+    setLoadingBalance(true);
+    try {
+      const response = await fetch("https://api.pollinations.ai/balance", {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBalance(data.balance || data.credits || 0);
+      } else {
+        console.log("Balance API not available or unauthorized");
+        setBalance(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch balance:", error);
+      setBalance(null);
+    } finally {
+      setLoadingBalance(false);
+    }
+  }, [apiKey]);
+
+  // Fetch balance when API key changes
+  useEffect(() => {
+    if (apiKey) {
+      fetchBalance();
+      // Refresh balance every 30 seconds
+      const interval = setInterval(fetchBalance, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setBalance(null);
+    }
+  }, [apiKey, fetchBalance]);
 
   useEffect(() => {
     if (apiKey && rememberKey) {
@@ -192,12 +236,21 @@ export default function App() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Balance/Generation Counter */}
-          <div className="flex items-center gap-2 px-4 py-2 glass rounded-full border border-white/10">
-            <Coins className="w-4 h-4 text-mystic-gold" />
-            <span className="text-sm font-medium text-mystic-gold">{generationCount}</span>
-            <span className="text-[10px] opacity-40 uppercase tracking-wider">Generations</span>
-          </div>
+          {/* Balance Display */}
+          {balance !== null ? (
+            <div className="flex items-center gap-2 px-4 py-2 glass rounded-full border border-white/10" title="Pollinations Balance">
+              <CreditCard className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-medium text-emerald-400">{balance}</span>
+              <span className="text-[10px] opacity-40 uppercase tracking-wider">Credits</span>
+              {loadingBalance && <RefreshCw className="w-3 h-3 animate-spin text-mystic-gold/50" />}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-2 glass rounded-full border border-white/10" title="Generations Count">
+              <Coins className="w-4 h-4 text-mystic-gold" />
+              <span className="text-sm font-medium text-mystic-gold">{generationCount}</span>
+              <span className="text-[10px] opacity-40 uppercase tracking-wider">Generations</span>
+            </div>
+          )}
           
           <button 
             onClick={() => setShowWelcome(true)}
