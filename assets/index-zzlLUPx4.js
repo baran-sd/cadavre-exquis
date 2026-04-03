@@ -144,7 +144,7 @@ Error generating stack: `+a.message+`
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const NA=[["path",{d:"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",key:"1xq2db"}]],R0=ge("zap",NA);async function OA({headPrompt:i,torsoPrompt:l,legsPrompt:o,atmosphere:u,customApiKey:c}){const d=c||"pk_WEQH2XRadxYUEgQt",h=`A full-body surrealist character. 
+ */const NA=[["path",{d:"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",key:"1xq2db"}]],R0=ge("zap",NA);async function OA({headPrompt:i,torsoPrompt:l,legsPrompt:o,atmosphere:u,customApiKey:c}){const d=c||"pk_WEQH2XRadxYUEgQt";console.log("🎨 Generating with API key:","Present"),console.log("Custom API Key:",c?"Present":"Not provided"),console.log("Env API Key:","Present");const h=`A full-body surrealist character. 
   Style: 1920s surrealism, dream-like, high contrast, mysterious. 
   Atmosphere: ${u}.
   
@@ -154,7 +154,7 @@ Error generating stack: `+a.message+`
   - Legs: ${o||"mystical and surreal"}
   
   The character should be centered, full-body, on a consistent dark atmospheric background. 
-  Artistic medium: Oil painting or charcoal sketch.`;try{const m=await fetch("https://gen.pollinations.ai/v1/images/generations",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${d}`},body:JSON.stringify({model:"flux",prompt:h,size:"1024x1792",response_format:"b64_json",seed:Math.floor(Math.random()*999999)})});if(!m.ok){const p=Math.floor(Math.random()*999999);return`https://image.pollinations.ai/prompt/${encodeURIComponent(h)}?width=1024&height=1792&model=flux&nologo=true&seed=${p}`}return`data:image/png;base64,${(await m.json()).data[0].b64_json}`}catch(m){throw console.error("Full character generation error:",m),m}}async function wA({headPrompt:i,torsoPrompt:l,legsPrompt:o,atmosphere:u,baseImage:c,zoneToEdit:d,customApiKey:h,seed:m}){if(!c||!d)return null;const g=h||"pk_WEQH2XRadxYUEgQt",v=`SURREALIST IMAGE EDITING TASK:
+  Artistic medium: Oil painting or charcoal sketch.`;try{const m=await fetch("https://gen.pollinations.ai/v1/images/generations",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${d}`},body:JSON.stringify({model:"flux",prompt:h,size:"1024x1792",response_format:"b64_json",seed:Math.floor(Math.random()*999999)})});if(console.log("Response status:",m.status),!m.ok){const p=await m.json();console.error("API Error:",p),console.log("Using fallback URL without API key...");const v=Math.floor(Math.random()*999999);return`https://image.pollinations.ai/prompt/${encodeURIComponent(h)}?width=1024&height=1792&model=flux&nologo=true&seed=${v}`}const g=await m.json();return console.log("✅ Success! Image generated"),`data:image/png;base64,${g.data[0].b64_json}`}catch(m){throw console.error("Full character generation error:",m),m}}async function wA({headPrompt:i,torsoPrompt:l,legsPrompt:o,atmosphere:u,baseImage:c,zoneToEdit:d,customApiKey:h,seed:m}){if(!c||!d)return null;const g=h||"pk_WEQH2XRadxYUEgQt",v=`SURREALIST IMAGE EDITING TASK:
   You are modifying a specific zone of an existing surrealist character.
   
   ZONE TO MODIFY: ${d}
